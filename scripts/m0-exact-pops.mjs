@@ -1,5 +1,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { compileExactPops, disposeExactKernel } from "../lib/geometry/occtExact.ts";
+import {
+  compileExactPops,
+  disposeExactKernel,
+  initializeExactKernel,
+} from "../lib/geometry/occtExact.ts";
 
 const INCH = 25.4;
 const baseline = JSON.parse(
@@ -25,10 +29,23 @@ let baseExact;
 let movedExact;
 
 try {
-  [baseExact, movedExact] = await Promise.all([
-    compileExactPops(baseline, { exportStep: true }),
-    compileExactPops(candidate, { exportStep: true }),
-  ]);
+  const initStart = performance.now();
+  await initializeExactKernel();
+  const initMs = performance.now() - initStart;
+
+  const baselineStart = performance.now();
+  baseExact = await compileExactPops(baseline, {
+    exportStep: true,
+    exportProjection: true,
+  });
+  const baselineTotalMs = performance.now() - baselineStart;
+
+  const movedStart = performance.now();
+  movedExact = await compileExactPops(candidate, {
+    exportStep: true,
+    exportProjection: true,
+  });
+  const movedTotalMs = performance.now() - movedStart;
 
 const approx = (actual, expected, tolerance = 0.05, label = "value") => {
   if (!Number.isFinite(actual) || !Number.isFinite(expected)) {
@@ -93,6 +110,16 @@ if (!baseExact.step?.length || !movedExact.step?.length) {
   throw new Error("STEP export was empty");
 }
 
+if (!baseExact.projectionSvg?.includes("<svg") || !movedExact.projectionSvg?.includes("<svg")) {
+  throw new Error("Direct OCCT multiview projection was empty");
+}
+
+const baselineProjectionPaths = (baseExact.projectionSvg.match(/<path\b/g) ?? []).length;
+const movedProjectionPaths = (movedExact.projectionSvg.match(/<path\b/g) ?? []).length;
+if (baselineProjectionPaths <= 0 || movedProjectionPaths <= 0) {
+  throw new Error("Direct OCCT multiview projection contained no paths");
+}
+
 if (baseExact.triangleCount <= 0 || movedExact.triangleCount <= 0) {
   throw new Error(
     `Exact tessellation was empty (baseline=${baseExact.triangleCount}, moved=${movedExact.triangleCount})`,
@@ -103,6 +130,8 @@ await mkdir("artifacts", { recursive: true });
 await Promise.all([
   writeFile("artifacts/pops-baseline.step", baseExact.step),
   writeFile("artifacts/pops-axle-plus-10.step", movedExact.step),
+  writeFile("artifacts/pops-baseline-multiview.svg", baseExact.projectionSvg),
+  writeFile("artifacts/pops-axle-plus-10-multiview.svg", movedExact.projectionSvg),
   writeFile(
     "artifacts/pops-exact-fixture.report.json",
     JSON.stringify(
@@ -110,17 +139,22 @@ await Promise.all([
         status: "pass",
         source: "data/pops-van.baseline.json",
         kernel: baseExact.kernel,
+        initMs,
         baseline: {
           revision: baseExact.revision,
           triangleCount: baseExact.triangleCount,
           metrics: baseExact.metrics,
           stepBytes: baseExact.step.length,
+          projectionPaths: baselineProjectionPaths,
+          totalMs: baselineTotalMs,
         },
         axlePlus10: {
           revision: movedExact.revision,
           triangleCount: movedExact.triangleCount,
           metrics: movedExact.metrics,
           stepBytes: movedExact.step.length,
+          projectionPaths: movedProjectionPaths,
+          totalMs: movedTotalMs,
         },
         assertions: {
           frontAxleDeltaMm: 254,
@@ -138,12 +172,18 @@ await Promise.all([
     JSON.stringify(
       {
         status: "pass",
+        kernel: baseExact.kernel,
+        initMs,
         baselineWheelbaseMm: baseExact.metrics.wheelbaseMm,
         movedWheelbaseMm: movedExact.metrics.wheelbaseMm,
         movedFrontAxleXmm: movedExact.metrics.frontAxleXmm,
         bodyFrontXmm: movedExact.metrics.bodyFrontXmm,
         baselineTriangles: baseExact.triangleCount,
         movedTriangles: movedExact.triangleCount,
+        baselineProjectionPaths,
+        movedProjectionPaths,
+        baselineTotalMs,
+        movedTotalMs,
       },
       null,
       2,
