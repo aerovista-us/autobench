@@ -2,7 +2,7 @@ import type { VehicleDesign } from "../model/types";
 import {
   disposeSharedGeometryRuntime,
   getSharedGeometryRuntime,
-} from "./sharedKernelRuntime";
+} from "./sharedKernelRuntime.ts";
 
 export interface ExactVehicleMetrics {
   frontAxleXmm: number;
