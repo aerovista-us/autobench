@@ -25,6 +25,7 @@ export interface ExactVehicleMesh {
   triangleCount: number;
   metrics: ExactVehicleMetrics;
   step?: string;
+  projectionSvg?: string;
 }
 
 let kernelPromise: ReturnType<typeof createKernel> | undefined;
@@ -46,7 +47,7 @@ function midpoint(min: number, max: number) {
 
 export function compileExactPops(
   design: VehicleDesign,
-  options: { exportStep?: boolean } = {},
+  options: { exportStep?: boolean; exportProjection?: boolean } = {},
 ): Promise<ExactVehicleMesh> {
   const run = compileQueue.then(() => compileInternal(design, options));
   compileQueue = run.then(
@@ -58,7 +59,7 @@ export function compileExactPops(
 
 async function compileInternal(
   design: VehicleDesign,
-  options: { exportStep?: boolean },
+  options: { exportStep?: boolean; exportProjection?: boolean },
 ): Promise<ExactVehicleMesh> {
   const kernel = await getKernel();
   kernel.releaseAll();
@@ -254,9 +255,18 @@ async function compileInternal(
     result.step = kernel.exportStep(assembly);
   }
 
+  if (options.exportProjection) {
+    result.projectionSvg = kernel.toMultiviewSVG(assembly);
+  }
+
   return result;
 }
 
+
+/** Initialize the cached exact kernel without compiling geometry. */
+export async function initializeExactKernel() {
+  await getKernel();
+}
 
 /**
  * Deterministic teardown for Node/CI callers.
