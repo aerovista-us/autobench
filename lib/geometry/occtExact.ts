@@ -24,7 +24,7 @@ export interface ExactVehicleMesh {
   indices: Uint32Array;
   triangleCount: number;
   metrics: ExactVehicleMetrics;
-  step?: Uint8Array;
+  step?: string;
 }
 
 let kernelPromise: ReturnType<typeof createKernel> | undefined;
@@ -77,7 +77,11 @@ async function compileInternal(
     x2: number,
     y2: number,
     z2: number,
-  ) => kernel.makeBoxFromCorners([x1, y1, z1], [x2, y2, z2]);
+  ) =>
+    kernel.makeBoxFromCorners(
+      { x: x1, y: y1, z: z1 },
+      { x: x2, y: y2, z: z2 },
+    );
 
   const body = placedBox(
     bodyRearX,
@@ -141,7 +145,10 @@ async function compileInternal(
     const raw = kernel.makeCylinder(radius, length);
     const lateral = kernel.rotate(
       raw,
-      { point: [0, 0, 0], direction: [1, 0, 0] },
+      {
+        point: { x: 0, y: 0, z: 0 },
+        direction: { x: 1, y: 0, z: 0 },
+      },
       -Math.PI / 2,
     );
     return kernel.translate(
@@ -215,10 +222,11 @@ async function compileInternal(
     angularDeflection: 0.25,
   });
 
-  const assemblyBounds = kernel.getBoundingBox(assembly);
-  const bodyBounds = kernel.getBoundingBox(body);
-  const frontTireBounds = kernel.getBoundingBox(frontLeftTire);
-  const rearTireBounds = kernel.getBoundingBox(rearLeftTire);
+  const boundsOptions = { useTriangulation: true } as const;
+  const assemblyBounds = kernel.getBoundingBox(assembly, boundsOptions);
+  const bodyBounds = kernel.getBoundingBox(body, boundsOptions);
+  const frontTireBounds = kernel.getBoundingBox(frontLeftTire, boundsOptions);
+  const rearTireBounds = kernel.getBoundingBox(rearLeftTire, boundsOptions);
 
   const measuredFrontAxleX = midpoint(frontTireBounds.xmin, frontTireBounds.xmax);
   const measuredRearAxleX = midpoint(rearTireBounds.xmin, rearTireBounds.xmax);
@@ -241,7 +249,7 @@ async function compileInternal(
   };
 
   if (options.exportStep) {
-    result.step = kernel.exportStep(assembly).slice();
+    result.step = kernel.exportStep(assembly);
   }
 
   return result;
