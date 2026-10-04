@@ -2,7 +2,7 @@ import type { KernelScore } from "./types";
 
 export const kernelScorecard: KernelScore[] = [
   {
-    kernel: "brepjs" as KernelScore["kernel"],
+    kernel: "brepjs",
     status: "not-run",
     notes: [
       "brepjs 20.0.0 + occt-wasm 5.5.0",
