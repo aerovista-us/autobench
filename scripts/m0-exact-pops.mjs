@@ -31,6 +31,10 @@ try {
   ]);
 
 const approx = (actual, expected, tolerance = 0.05, label = "value") => {
+  if (!Number.isFinite(actual) || !Number.isFinite(expected)) {
+    throw new Error(`${label}: non-finite geometry value (actual=${actual}, expected=${expected})`);
+  }
+
   if (Math.abs(actual - expected) > tolerance) {
     throw new Error(`${label}: expected ${expected}, got ${actual}`);
   }
@@ -63,6 +67,12 @@ approx(
 
 if (!baseExact.step?.length || !movedExact.step?.length) {
   throw new Error("STEP export was empty");
+}
+
+if (baseExact.triangleCount <= 0 || movedExact.triangleCount <= 0) {
+  throw new Error(
+    `Exact tessellation was empty (baseline=${baseExact.triangleCount}, moved=${movedExact.triangleCount})`,
+  );
 }
 
 await mkdir("artifacts", { recursive: true });
