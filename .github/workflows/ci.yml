@@ -11,7 +11,7 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -20,13 +20,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install
         run: npm install
 
       - name: Geometry tests
         run: npm test
+
+      - name: Exact CAD kernel smoke test
+        run: |
+          mkdir -p artifacts
+          npx brep cad/m0-frame-rail.brep.ts --check --step artifacts/m0-frame-rail.step --json artifacts/m0-frame-rail.report.json
 
       - name: Next build
         run: npm run build
