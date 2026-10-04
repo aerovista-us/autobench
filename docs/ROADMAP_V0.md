@@ -7,11 +7,13 @@
 - [ ] ISO 8855-style axis convention: +X forward, +Y left, +Z up
 - [ ] revision + operation-log model
 - [ ] GeometryEngine adapter
+- [ ] brepjs/occt-wasm implementation
 - [ ] Replicad/OpenCascade implementation
 - [ ] OpenGeometry implementation
 - [ ] Three.js/R3F viewport
 - [ ] STEP + projection export smoke tests
-- [ ] automated comparison fixture and scorecard
+- [x] exact brepjs frame-rail CI fixture
+- [ ] full automated comparison fixture and scorecard
 - [ ] select and lock the winning primary kernel
 
 **Exit:** edit one dimension and reproduce the same result in 3D, STEP and side projection using the selected engine, with a documented bake-off result.
@@ -95,7 +97,7 @@
 
 Do not build all of M0 before seeing geometry.
 
-Build one vertical slice twice—once per candidate kernel:
+Build one vertical slice across all candidate kernels:
 
 1. create VehicleDesign with wheelbase, tracks, tire diameter, frame rails and body envelope
 2. compile through GeometryEngine
