@@ -41,15 +41,39 @@ const approx = (actual, expected, tolerance = 0.05, label = "value") => {
 };
 
 approx(
+  baseExact.metrics.frontAxleXmm,
+  baseline.parameters.baselineWheelbaseMm,
+  0.01,
+  "baseline front axle absolute X",
+);
+approx(
+  baseExact.metrics.rearAxleXmm,
+  0,
+  0.01,
+  "baseline rear axle absolute X",
+);
+approx(
+  movedExact.metrics.frontAxleXmm,
+  baseline.parameters.baselineWheelbaseMm + 10 * INCH,
+  0.01,
+  "moved front axle absolute X",
+);
+approx(
+  movedExact.metrics.rearAxleXmm,
+  0,
+  0.01,
+  "moved rear axle absolute X",
+);
+approx(
   movedExact.metrics.frontAxleXmm - baseExact.metrics.frontAxleXmm,
   10 * INCH,
-  0.05,
+  0.01,
   "front axle exact delta",
 );
 approx(
   movedExact.metrics.wheelbaseMm - baseExact.metrics.wheelbaseMm,
   10 * INCH,
-  0.05,
+  0.01,
   "wheelbase exact delta",
 );
 approx(
