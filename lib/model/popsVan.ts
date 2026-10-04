@@ -1,4 +1,4 @@
-import baseline from "@/data/pops-van.baseline.json";
+import baseline from "../../data/pops-van.baseline.json";
 import type { VehicleDesign } from "./types";
 
 export const INCH = 25.4;
