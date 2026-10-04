@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { compileExactPops } from "../lib/geometry/occtExact.ts";
+import { compileExactPops, disposeExactKernel } from "../lib/geometry/occtExact.ts";
 
 const INCH = 25.4;
 const baseline = JSON.parse(
@@ -21,10 +21,14 @@ candidate.operationLog = [
   }
 ];
 
-const [baseExact, movedExact] = await Promise.all([
-  compileExactPops(baseline, { exportStep: true }),
-  compileExactPops(candidate, { exportStep: true }),
-]);
+let baseExact;
+let movedExact;
+
+try {
+  [baseExact, movedExact] = await Promise.all([
+    compileExactPops(baseline, { exportStep: true }),
+    compileExactPops(candidate, { exportStep: true }),
+  ]);
 
 const approx = (actual, expected, tolerance = 0.05, label = "value") => {
   if (Math.abs(actual - expected) > tolerance) {
@@ -96,18 +100,21 @@ await Promise.all([
   ),
 ]);
 
-console.log(
-  JSON.stringify(
-    {
-      status: "pass",
-      baselineWheelbaseMm: baseExact.metrics.wheelbaseMm,
-      movedWheelbaseMm: movedExact.metrics.wheelbaseMm,
-      movedFrontAxleXmm: movedExact.metrics.frontAxleXmm,
-      bodyFrontXmm: movedExact.metrics.bodyFrontXmm,
-      baselineTriangles: baseExact.triangleCount,
-      movedTriangles: movedExact.triangleCount,
-    },
-    null,
-    2,
-  ),
-);
+  console.log(
+    JSON.stringify(
+      {
+        status: "pass",
+        baselineWheelbaseMm: baseExact.metrics.wheelbaseMm,
+        movedWheelbaseMm: movedExact.metrics.wheelbaseMm,
+        movedFrontAxleXmm: movedExact.metrics.frontAxleXmm,
+        bodyFrontXmm: movedExact.metrics.bodyFrontXmm,
+        baselineTriangles: baseExact.triangleCount,
+        movedTriangles: movedExact.triangleCount,
+      },
+      null,
+      2,
+    ),
+  );
+} finally {
+  await disposeExactKernel();
+}
