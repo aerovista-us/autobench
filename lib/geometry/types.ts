@@ -1,6 +1,6 @@
 import type { VehicleDesign } from "@/lib/model/types";
 
-export type KernelName = "preview" | "replicad" | "opengeometry";
+export type KernelName = "preview" | "brepjs" | "replicad" | "opengeometry";
 
 export interface GeometryArtifact {
   kernel: KernelName;
