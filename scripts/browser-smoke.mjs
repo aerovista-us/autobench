@@ -1,7 +1,10 @@
 import { chromium } from "playwright";
 
 const baseUrl = process.env.AUTOBENCH_URL ?? "http://127.0.0.1:3000";
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  args: ["--enable-precise-memory-info"],
+});
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -19,6 +22,9 @@ try {
     .waitFor({ state: "visible", timeout: 60_000 });
 
   const initialBadge = await page.locator(".viewport-badge").innerText();
+  const initialHeapBytes = await page.evaluate(
+    () => (performance).memory?.usedJSHeapSize ?? null,
+  );
   if (!initialBadge.includes("EXACT OCCT")) {
     throw new Error(`Exact kernel did not become active: ${initialBadge}`);
   }
@@ -34,6 +40,9 @@ try {
     .waitFor({ state: "visible", timeout: 60_000 });
 
   const finalBadge = await page.locator(".viewport-badge").innerText();
+  const finalHeapBytes = await page.evaluate(
+    () => (performance).memory?.usedJSHeapSize ?? null,
+  );
   const wheelbase = await page
     .locator(".metric")
     .filter({ hasText: "Wheelbase" })
@@ -54,6 +63,12 @@ try {
         initialBadge,
         finalBadge,
         wheelbase,
+        initialHeapBytes,
+        finalHeapBytes,
+        heapDeltaBytes:
+          initialHeapBytes !== null && finalHeapBytes !== null
+            ? finalHeapBytes - initialHeapBytes
+            : null,
       },
       null,
       2,
