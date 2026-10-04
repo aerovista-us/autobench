@@ -2,18 +2,23 @@
 
 ## M0 — Foundation + kernel bake-off
 
-- [ ] Next.js / React / TypeScript application shell
-- [ ] canonical VehicleDesign schema
-- [ ] ISO 8855-style axis convention: +X forward, +Y left, +Z up
-- [ ] revision + operation-log model
-- [ ] GeometryEngine adapter
-- [ ] brepjs/occt-wasm implementation
+- [x] Next.js / React / TypeScript application shell
+- [x] canonical VehicleDesign schema
+- [x] ISO 8855-style axis convention: +X forward, +Y left, +Z up
+- [x] revision + operation-log model
+- [x] GeometryEngine adapter
+- [x] direct occt-wasm Pops implementation
+- [ ] brepjs full Pops implementation
 - [ ] Replicad/OpenCascade implementation
 - [ ] OpenGeometry implementation
-- [ ] Three.js/R3F viewport
-- [ ] STEP + projection export smoke tests
+- [x] Three.js/R3F viewport
+- [x] STEP export smoke tests
+- [x] analytical side projection smoke
+- [ ] exact-kernel projection/hidden-line comparison
 - [x] exact brepjs frame-rail CI fixture
-- [ ] full automated comparison fixture and scorecard
+- [x] direct occt-wasm baseline/+10 in automated fixture
+- [x] production Chromium/WASM runtime gate
+- [ ] full cross-kernel comparison fixture and scorecard
 - [ ] select and lock the winning primary kernel
 
 **Exit:** edit one dimension and reproduce the same result in 3D, STEP and side projection using the selected engine, with a documented bake-off result.
