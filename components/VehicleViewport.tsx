@@ -12,6 +12,7 @@ import {
 } from "@/lib/geometry/occtExact";
 
 const MM = 1 / 1000;
+const sceneZ = (canonicalY: number) => -canonicalY;
 
 function Tire({
   x,
@@ -51,7 +52,6 @@ function Tire({
 function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
   const p = design.parameters;
   const d = deriveVehicle(design);
-  const sceneZ = (canonicalY: number) => -canonicalY;
   const bodyLength = d.bodyFrontXmm - d.bodyRearXmm;
   const bodyCenterX = (d.bodyFrontXmm + d.bodyRearXmm) / 2;
   const frameLength = d.bodyFrontXmm - d.bodyRearXmm - 180;
