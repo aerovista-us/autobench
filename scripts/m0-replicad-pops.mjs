@@ -4,6 +4,7 @@ import {
   makeBox,
   makeCompound,
   makeCylinder,
+  drawProjection,
   setOC,
 } from "replicad";
 
@@ -206,6 +207,16 @@ async function compile(design) {
     const mesh = assembly.mesh({ tolerance: 4, angularTolerance: 0.25 });
     const meshMs = performance.now() - meshStart;
 
+    const projectionStart = performance.now();
+    const { visible, hidden } = drawProjection(assembly, "front");
+    const visibleProjectionCount = visible.toSVGPaths().flat(Infinity).length;
+    const hiddenProjectionCount = hidden.toSVGPaths().flat(Infinity).length;
+    const projectionMs = performance.now() - projectionStart;
+
+    if (visibleProjectionCount <= 0) {
+      throw new Error("Replicad hidden-line projection returned no visible paths");
+    }
+
     const stepStart = performance.now();
     const stepBlob = assembly.blobSTEP();
     const stepText = await stepBlob.text();
@@ -216,9 +227,14 @@ async function compile(design) {
       triangleCount: mesh.triangles.length / 3,
       vertexCount: mesh.vertices.length / 3,
       stepText,
+      projection: {
+        visiblePathCount: visibleProjectionCount,
+        hiddenPathCount: hiddenProjectionCount,
+      },
       timings: {
         totalMs: performance.now() - start,
         meshMs,
+        projectionMs,
         stepMs,
       },
     };
@@ -261,6 +277,7 @@ await Promise.all([
           triangleCount: base.triangleCount,
           vertexCount: base.vertexCount,
           stepBytes: Buffer.byteLength(base.stepText),
+          projection: base.projection,
           timings: base.timings,
         },
         axlePlus10: {
@@ -268,6 +285,7 @@ await Promise.all([
           triangleCount: moved.triangleCount,
           vertexCount: moved.vertexCount,
           stepBytes: Buffer.byteLength(moved.stepText),
+          projection: moved.projection,
           timings: moved.timings,
         },
       },
@@ -287,6 +305,10 @@ console.log(JSON.stringify({
   bodyFrontXmm: moved.metrics.bodyFrontXmm,
   baselineTriangles: base.triangleCount,
   movedTriangles: moved.triangleCount,
+  baselineProjectionVisible: base.projection.visiblePathCount,
+  baselineProjectionHidden: base.projection.hiddenPathCount,
+  movedProjectionVisible: moved.projection.visiblePathCount,
+  movedProjectionHidden: moved.projection.hiddenPathCount,
   baselineTotalMs: base.timings.totalMs,
   movedTotalMs: moved.timings.totalMs,
 }, null, 2));
