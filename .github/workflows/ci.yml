@@ -36,6 +36,9 @@ jobs:
       - name: Exact Pops Van scenario verification
         run: node scripts/m0-exact-pops.mjs
 
+      - name: Replicad full Pops bake-off
+        run: node scripts/m0-replicad-pops.mjs
+
       - name: Upload exact CAD artifacts
         uses: actions/upload-artifact@v4
         with:
