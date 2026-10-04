@@ -33,5 +33,12 @@ jobs:
           mkdir -p artifacts
           npx brep cad/m0-frame-rail.brep.ts --check --step artifacts/m0-frame-rail.step --json artifacts/m0-frame-rail.report.json
 
+      - name: Upload exact CAD artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: m0-exact-cad-artifacts
+          path: artifacts/
+          if-no-files-found: error
+
       - name: Next build
         run: npm run build
