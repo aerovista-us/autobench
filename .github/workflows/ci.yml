@@ -49,7 +49,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m0-exact-cad-artifacts
-          path: artifacts/
+          path: |
+            artifacts/
+            package-lock.json
           if-no-files-found: error
 
       - name: Next build
