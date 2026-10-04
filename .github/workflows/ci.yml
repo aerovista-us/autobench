@@ -66,3 +66,4 @@ jobs:
           done
 
           npm run smoke:browser
+          node scripts/bakeoff-browser-smoke.mjs
