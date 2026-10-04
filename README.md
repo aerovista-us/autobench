@@ -25,12 +25,13 @@ The first proving ground is the family-built Chevy G-series 4x4 van. Initial des
 - Next.js + React + TypeScript
 - Tailwind CSS
 - Three.js / React Three Fiber for the interactive viewport
-- **M0 geometry-kernel bake-off:** Replicad/OpenCascade vs OpenGeometry/Rust-WASM
+- **M0 geometry-kernel bake-off:** brepjs/occt-wasm vs Replicad/OpenCascade vs OpenGeometry/Rust-WASM
 - STEP/STL/projection export from the selected deterministic geometry engine
 - FormDrive as a reference for automotive studio/camera/material interaction patterns
 - COLMAP / Meshroom for optional photo reconstruction
 - Open3D for point-cloud cleanup, alignment, and comparison
 - FreeCAD TechDraw as an optional downstream technical-drawing worker
+- brepjs-cad for deterministic AI-authored geometry verification in CI
 - build123d/CadQuery as server-side geometry fallbacks/specialist tools
 - Project Chrono as a later-stage vehicle-dynamics/suspension analysis integration
 
