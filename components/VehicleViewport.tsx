@@ -206,15 +206,15 @@ function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
     const normals = new Float32Array(exact.normals.length);
 
     // OCCT uses the canonical AutoBench axes: X forward, Y left, Z up.
-    // Three.js scene uses X forward, Y up, Z lateral.
+    // Three.js scene uses X forward, Y up, -Z left. The sign preserves handedness.
     for (let i = 0; i < exact.positions.length; i += 3) {
       positions[i] = exact.positions[i] * MM;
       positions[i + 1] = exact.positions[i + 2] * MM;
-      positions[i + 2] = exact.positions[i + 1] * MM;
+      positions[i + 2] = -exact.positions[i + 1] * MM;
 
       normals[i] = exact.normals[i];
       normals[i + 1] = exact.normals[i + 2];
-      normals[i + 2] = exact.normals[i + 1];
+      normals[i + 2] = -exact.normals[i + 1];
     }
 
     result.setAttribute("position", new BufferAttribute(positions, 3));
