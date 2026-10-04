@@ -122,6 +122,10 @@ A candidate is disqualified if it cannot reliably:
 
 ## Current conclusion
 
-**Direct occt-wasm currently leads on evidence, but the decision is not locked.**
+The comparison has now been executed across direct occt-wasm, brepjs, Replicad, and OpenGeometry.
 
-It is the first path to pass the full Pops fixture, STEP export, production browser/WASM runtime, and live +10 in rebuild. brepjs remains attractive for its higher-level authoring and verification ergonomics, but only its frame-rail CLI fixture is proven so far. Replicad and OpenGeometry still need the same Pops Van fixture before M0 can close.
+The selected architecture is **direct occt-wasm as the authoritative exact kernel, with brepjs registered onto the same kernel instance for typed/AI authoring and verification**.
+
+Replicad and OpenGeometry remain valuable reference/challenger implementations, but they are not the primary M0 production path.
+
+See `docs/M0_KERNEL_BAKEOFF_RESULTS.md` for the measured results, tradeoffs, shared-kernel proof, and decision rationale.
