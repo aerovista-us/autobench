@@ -6,8 +6,9 @@ Do **not** lock the geometry kernel before M0.
 
 Run the same Pops Van vertical slice through:
 
-1. **Replicad + OpenCascade/WASM** — current front-runner for mature BREP behavior and straightforward STEP/hidden-line projection export.
-2. **OpenGeometry + Rust/WASM** — strong challenger designed explicitly for browser/AI CAD with direct Three.js integration and deterministic modeling operations.
+1. **brepjs + occt-wasm** — new front-runner because it combines exact browser BREP, STEP, TypeScript, Three.js mesh output, and a deterministic AI verification CLI that can fail CI when geometry does not match declared intent.
+2. **Replicad + OpenCascade/WASM** — mature browser BREP option with straightforward STEP and hidden-line projection export.
+3. **OpenGeometry + Rust/WASM** — strong challenger designed explicitly for browser/AI CAD with direct Three.js integration and deterministic modeling operations.
 
 Keep the canonical `VehicleDesign` schema independent of either engine.
 
@@ -15,7 +16,8 @@ Keep the canonical `VehicleDesign` schema independent of either engine.
 
 | Tool | Role | License | Adopt? | Notes |
 | --- | --- | --- | --- | --- |
-| Replicad | Parametric BREP geometry in browser/Node | MIT | **M0 front-runner** | OpenCascade abstraction built for embedding in web apps. STEP/STL/JSON and SVG projection workflow. |
+| brepjs + occt-wasm | Exact BREP geometry + AI verification | Apache-2.0 + LGPL-2.1 kernel | **M0 front-runner** | Exact STEP-grade solids, TypeScript API, R3F-compatible mesh output, measurements, and brepjs-cad verification CLI. |
+| Replicad | Parametric BREP geometry in browser/Node | MIT | **M0 challenger** | OpenCascade abstraction built for embedding in web apps. STEP/STL/JSON and SVG projection workflow. |
 | OpenGeometry | Browser-native Rust/WASM CAD kernel | MPL-2.0 | **M0 challenger** | Explicitly targets web/AI CAD; Three.js-friendly; primitives, sweeps, booleans, STEP/STL and projection/export paths. APIs/exports are still evolving. |
 | OpenCascade.js | Geometry kernel under Replicad | OCCT ecosystem licensing | **Indirect** | Use through Replicad's packaged WASM unless a lower-level need appears. |
 | Three.js + React Three Fiber | Interactive 3D viewport | MIT | **Core** | Selection, cameras, materials, helpers, transforms, overlays, animation. |
@@ -128,3 +130,12 @@ Then prove that one parameter edit—e.g. moving the front axle forward 10 inche
 - a revision diff.
 
 Only then add detailed surfacing.
+
+
+## brepjs finding
+
+brepjs materially changes the M0 comparison because its `brepjs-cad` workflow directly addresses the main AI-CAD failure mode: an agent can author a model, run it against a real kernel, and receive deterministic geometry measurements and pass/fail assertions instead of judging correctness from source code or a render.
+
+AutoBench now includes an exact frame-rail fixture under `cad/`. CI verifies that fixture and exports a STEP file before the Next.js build is allowed to pass.
+
+This does **not** automatically make brepjs the final winner. AutoBench still needs to compare live rebuild latency, complex body-envelope operations, drawing/projection ergonomics, browser memory use, and long-term API stability across all candidates.
