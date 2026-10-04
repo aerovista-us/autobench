@@ -20,16 +20,19 @@ The first proving ground is the family-built Chevy G-series 4x4 van. Initial des
 6. **Every view is reproducible.** 3D, side/front/top projections, drawings, exports, and renders derive from the same revision.
 7. **Plans are fabrication-oriented, not stamped engineering.** Structural, steering, braking, suspension, and road-safety changes still require competent real-world verification.
 
-## Proposed core stack
+## Proposed stack
 
 - Next.js + React + TypeScript
 - Tailwind CSS
 - Three.js / React Three Fiber for the interactive viewport
-- Replicad + OpenCascade/WASM for browser/server parametric BREP geometry
-- STEP/STL/SVG projection export from the same geometry engine
+- **M0 geometry-kernel bake-off:** brepjs/occt-wasm vs Replicad/OpenCascade vs OpenGeometry/Rust-WASM
+- STEP/STL/projection export from the selected deterministic geometry engine
+- FormDrive as a reference for automotive studio/camera/material interaction patterns
 - COLMAP / Meshroom for optional photo reconstruction
 - Open3D for point-cloud cleanup, alignment, and comparison
 - FreeCAD TechDraw as an optional downstream technical-drawing worker
+- brepjs-cad for deterministic AI-authored geometry verification in CI
+- build123d/CadQuery as server-side geometry fallbacks/specialist tools
 - Project Chrono as a later-stage vehicle-dynamics/suspension analysis integration
 
 ## Product workflow
@@ -38,4 +41,4 @@ Capture -> Calibrate -> Model -> Modify -> Validate -> Compare -> Render -> Draw
 
 ## Status
 
-Repository initialized. Architecture and Pops Van capture specifications are being authored next.
+Repository initialized. Architecture, open-source evaluation, Pops Van capture specification, and v0 roadmap are on the planning branch in PR #1.
