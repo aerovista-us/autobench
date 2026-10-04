@@ -39,6 +39,9 @@ jobs:
       - name: Replicad full Pops bake-off
         run: node scripts/m0-replicad-pops.mjs
 
+      - name: brepjs full Pops bake-off
+        run: node scripts/m0-brepjs-pops.mjs
+
       - name: Upload exact CAD artifacts
         uses: actions/upload-artifact@v4
         with:
