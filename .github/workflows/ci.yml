@@ -45,3 +45,21 @@ jobs:
 
       - name: Next build
         run: npm run build
+
+      - name: Install browser smoke dependency
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser exact-kernel smoke
+        run: |
+          npm start > /tmp/autobench-next.log 2>&1 &
+          APP_PID=$!
+          trap 'kill $APP_PID || true' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000 > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          npm run smoke:browser
