@@ -51,6 +51,7 @@ function Tire({
 function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
   const p = design.parameters;
   const d = deriveVehicle(design);
+  const sceneZ = (canonicalY: number) => -canonicalY;
   const bodyLength = d.bodyFrontXmm - d.bodyRearXmm;
   const bodyCenterX = (d.bodyFrontXmm + d.bodyRearXmm) / 2;
   const frameLength = d.bodyFrontXmm - d.bodyRearXmm - 180;
@@ -116,7 +117,7 @@ function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
           position={[
             frameCenterX * MM,
             (p.groundClearanceMm + p.frameRailHeightMm / 2) * MM,
-            (side * p.frameRailSpacingMm / 2) * MM,
+            sceneZ(side * p.frameRailSpacingMm / 2) * MM,
           ]}
         >
           <boxGeometry
@@ -152,26 +153,26 @@ function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
 
       <Tire
         x={0}
-        z={rearTrackHalf}
+        z={sceneZ(rearTrackHalf)}
         diameter={p.tireDiameterMm}
         width={p.tireWidthMm}
       />
       <Tire
         x={0}
-        z={-rearTrackHalf}
+        z={sceneZ(-rearTrackHalf)}
         diameter={p.tireDiameterMm}
         width={p.tireWidthMm}
       />
       <Tire
         x={d.frontAxleXmm}
-        z={frontTrackHalf}
+        z={sceneZ(frontTrackHalf)}
         diameter={p.tireDiameterMm}
         width={p.tireWidthMm}
         accent
       />
       <Tire
         x={d.frontAxleXmm}
-        z={-frontTrackHalf}
+        z={sceneZ(-frontTrackHalf)}
         diameter={p.tireDiameterMm}
         width={p.tireWidthMm}
         accent
@@ -181,14 +182,14 @@ function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
         <>
           <Tire
             x={baselineFrontX}
-            z={frontTrackHalf}
+            z={sceneZ(frontTrackHalf)}
             diameter={p.tireDiameterMm}
             width={p.tireWidthMm}
             opacity={0.2}
           />
           <Tire
             x={baselineFrontX}
-            z={-frontTrackHalf}
+            z={sceneZ(-frontTrackHalf)}
             diameter={p.tireDiameterMm}
             width={p.tireWidthMm}
             opacity={0.2}
@@ -248,14 +249,14 @@ function DesignGuides({ design }: { design: VehicleDesign }) {
         <>
           <Tire
             x={p.baselineWheelbaseMm}
-            z={frontTrackHalf}
+            z={sceneZ(frontTrackHalf)}
             diameter={p.tireDiameterMm}
             width={p.tireWidthMm}
             opacity={0.16}
           />
           <Tire
             x={p.baselineWheelbaseMm}
-            z={-frontTrackHalf}
+            z={sceneZ(-frontTrackHalf)}
             diameter={p.tireDiameterMm}
             width={p.tireWidthMm}
             opacity={0.16}
