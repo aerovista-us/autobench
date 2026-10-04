@@ -18,7 +18,7 @@ export interface ExactVehicleMetrics {
 
 export interface ExactVehicleMesh {
   revision: number;
-  kernel: "brepjs/occt-wasm";
+  kernel: "occt-wasm";
   positions: Float32Array;
   normals: Float32Array;
   indices: Uint32Array;
@@ -235,7 +235,7 @@ async function compileInternal(
 
   const result: ExactVehicleMesh = {
     revision: design.revision,
-    kernel: "brepjs/occt-wasm",
+    kernel: "occt-wasm",
     positions: mesh.positions.slice(),
     normals: mesh.normals.slice(),
     indices: mesh.indices.slice(),
