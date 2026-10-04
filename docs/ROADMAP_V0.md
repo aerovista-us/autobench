@@ -1,16 +1,20 @@
 # AutoBench Roadmap v0.1
 
-## M0 — Foundation
+## M0 — Foundation + kernel bake-off
 
 - [ ] Next.js / React / TypeScript application shell
 - [ ] canonical VehicleDesign schema
-- [ ] units and datum conventions
+- [ ] ISO 8855-style axis convention: +X forward, +Y left, +Z up
 - [ ] revision + operation-log model
-- [ ] Replicad/OpenCascade worker proof
+- [ ] GeometryEngine adapter
+- [ ] Replicad/OpenCascade implementation
+- [ ] OpenGeometry implementation
 - [ ] Three.js/R3F viewport
-- [ ] STEP + SVG projection export smoke test
+- [ ] STEP + projection export smoke tests
+- [ ] automated comparison fixture and scorecard
+- [ ] select and lock the winning primary kernel
 
-**Exit:** edit one dimension and reproduce the same result in 3D, STEP and side projection.
+**Exit:** edit one dimension and reproduce the same result in 3D, STEP and side projection using the selected engine, with a documented bake-off result.
 
 ## M1 — Pops Van baseline
 
@@ -82,6 +86,7 @@
 
 - [ ] saved camera/view presets
 - [ ] accurate PBR render
+- [ ] reuse/adapt proven FormDrive-style studio interaction patterns where useful
 - [ ] headless Blender render
 - [ ] optional geometry-conditioned generative enhancement
 - [ ] Project Chrono feasibility spike for suspension/steering dynamics
@@ -90,16 +95,18 @@
 
 Do not build all of M0 before seeing geometry.
 
-Build one vertical slice:
+Build one vertical slice twice—once per candidate kernel:
 
 1. create VehicleDesign with wheelbase, tracks, tire diameter, frame rails and body envelope
-2. compile with Replicad
+2. compile through GeometryEngine
 3. render with R3F
 4. expose "front axle offset"
 5. update geometry live
-6. generate side SVG projection
+6. generate side projection
 7. export STEP
 8. compute wheelbase and approach angle
 9. save revision
+10. run identical fixture tests
+11. choose the kernel
 
-That slice proves the architecture.
+That slice proves the architecture without locking us into the wrong CAD foundation.
