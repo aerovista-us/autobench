@@ -1,4 +1,8 @@
 import type { VehicleDesign } from "../model/types";
+import {
+  disposeSharedGeometryRuntime,
+  getSharedGeometryRuntime,
+} from "./sharedKernelRuntime";
 
 export interface ExactVehicleMetrics {
   frontAxleXmm: number;
@@ -28,17 +32,11 @@ export interface ExactVehicleMesh {
   projectionSvg?: string;
 }
 
-let kernelPromise: ReturnType<typeof createKernel> | undefined;
 let compileQueue: Promise<void> = Promise.resolve();
 
-async function createKernel() {
-  const { OcctKernel } = await import("occt-wasm");
-  return OcctKernel.init();
-}
-
 async function getKernel() {
-  kernelPromise ??= createKernel();
-  return kernelPromise;
+  const runtime = await getSharedGeometryRuntime();
+  return runtime.kernel;
 }
 
 function midpoint(min: number, max: number) {
@@ -274,11 +272,6 @@ export async function initializeExactKernel() {
  */
 export async function disposeExactKernel() {
   await compileQueue;
-
-  if (!kernelPromise) return;
-
-  const kernel = await kernelPromise;
-  kernel[Symbol.dispose]();
-  kernelPromise = undefined;
+  await disposeSharedGeometryRuntime();
   compileQueue = Promise.resolve();
 }
