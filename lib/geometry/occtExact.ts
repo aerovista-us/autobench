@@ -222,11 +222,13 @@ async function compileInternal(
     angularDeflection: 0.25,
   });
 
-  const boundsOptions = { useTriangulation: true } as const;
-  const assemblyBounds = kernel.getBoundingBox(assembly, boundsOptions);
-  const bodyBounds = kernel.getBoundingBox(body, boundsOptions);
-  const frontTireBounds = kernel.getBoundingBox(frontLeftTire, boundsOptions);
-  const rearTireBounds = kernel.getBoundingBox(rearLeftTire, boundsOptions);
+  // Measurements must come from exact BREP surfaces, not the display mesh.
+  // Tessellated bounds are allowed to be approximate and can shift derived
+  // centers by the mesh deflection tolerance.
+  const assemblyBounds = kernel.getBoundingBox(assembly);
+  const bodyBounds = kernel.getBoundingBox(body);
+  const frontTireBounds = kernel.getBoundingBox(frontLeftTire);
+  const rearTireBounds = kernel.getBoundingBox(rearLeftTire);
 
   const measuredFrontAxleX = midpoint(frontTireBounds.xmin, frontTireBounds.xmax);
   const measuredRearAxleX = midpoint(rearTireBounds.xmin, rearTireBounds.xmax);
