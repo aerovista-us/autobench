@@ -25,6 +25,11 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Production dependency audit report
+        run: |
+          mkdir -p artifacts
+          npm audit --omit=dev --json > artifacts/npm-audit-production.json || true
+
       - name: Geometry tests
         run: npm test
 
@@ -56,6 +61,18 @@ jobs:
 
       - name: Next build
         run: npm run build
+
+      - name: Runtime and bundle footprint
+        run: node scripts/m0-runtime-footprint.mjs
+
+      - name: Upload final runtime reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: m0-runtime-reports
+          path: |
+            artifacts/m0-runtime-footprint.json
+            artifacts/npm-audit-production.json
+          if-no-files-found: error
 
       - name: Install browser smoke dependency
         run: npx playwright install --with-deps chromium
