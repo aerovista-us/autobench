@@ -2,9 +2,14 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
+import { BufferAttribute, BufferGeometry } from "three";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type { VehicleDesign } from "@/lib/model/types";
 import { deriveVehicle } from "@/lib/model/derive";
+import {
+  compileExactPops,
+  type ExactVehicleMesh,
+} from "@/lib/geometry/occtExact";
 
 const MM = 1 / 1000;
 
@@ -28,7 +33,9 @@ function Tire({
       position={[x * MM, (diameter / 2) * MM, z * MM]}
       rotation={[Math.PI / 2, 0, 0]}
     >
-      <cylinderGeometry args={[(diameter / 2) * MM, (diameter / 2) * MM, width * MM, 40]} />
+      <cylinderGeometry
+        args={[(diameter / 2) * MM, (diameter / 2) * MM, width * MM, 40]}
+      />
       <meshStandardMaterial
         color={accent ? "#f4b84a" : "#20252c"}
         roughness={0.82}
@@ -41,7 +48,7 @@ function Tire({
   );
 }
 
-function VehicleModel({ design }: { design: VehicleDesign }) {
+function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
   const p = design.parameters;
   const d = deriveVehicle(design);
   const bodyLength = d.bodyFrontXmm - d.bodyRearXmm;
@@ -61,7 +68,9 @@ function VehicleModel({ design }: { design: VehicleDesign }) {
           0,
         ]}
       >
-        <boxGeometry args={[bodyLength * MM, p.bodyHeightMm * MM, p.bodyWidthMm * MM]} />
+        <boxGeometry
+          args={[bodyLength * MM, p.bodyHeightMm * MM, p.bodyWidthMm * MM]}
+        />
         <meshStandardMaterial
           color="#17314a"
           roughness={0.62}
@@ -78,18 +87,26 @@ function VehicleModel({ design }: { design: VehicleDesign }) {
           0,
         ]}
       >
-        <boxGeometry args={[520 * MM, p.bodyHeightMm * 0.74 * MM, p.bodyWidthMm * 0.94 * MM]} />
+        <boxGeometry
+          args={[
+            520 * MM,
+            p.bodyHeightMm * 0.74 * MM,
+            p.bodyWidthMm * 0.94 * MM,
+          ]}
+        />
         <meshStandardMaterial color="#254d70" roughness={0.5} metalness={0.22} />
       </mesh>
 
       <mesh
         position={[
           (d.bodyFrontXmm + p.bumperLeadMm / 2) * MM,
-          (p.groundClearanceMm + 130) * MM,
+          (p.groundClearanceMm + 90) * MM,
           0,
         ]}
       >
-        <boxGeometry args={[p.bumperLeadMm * MM, 180 * MM, (p.bodyWidthMm + 90) * MM]} />
+        <boxGeometry
+          args={[p.bumperLeadMm * MM, 180 * MM, (p.bodyWidthMm + 90) * MM]}
+        />
         <meshStandardMaterial color="#101419" roughness={0.45} metalness={0.72} />
       </mesh>
 
@@ -102,25 +119,63 @@ function VehicleModel({ design }: { design: VehicleDesign }) {
             (side * p.frameRailSpacingMm / 2) * MM,
           ]}
         >
-          <boxGeometry args={[frameLength * MM, p.frameRailHeightMm * MM, p.frameRailWidthMm * MM]} />
+          <boxGeometry
+            args={[
+              frameLength * MM,
+              p.frameRailHeightMm * MM,
+              p.frameRailWidthMm * MM,
+            ]}
+          />
           <meshStandardMaterial color="#3f4953" roughness={0.5} metalness={0.55} />
         </mesh>
       ))}
 
-      <mesh position={[d.frontAxleXmm * MM, (p.tireDiameterMm / 2) * MM, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[55 * MM, 55 * MM, (p.frontTrackMm + 160) * MM, 20]} />
+      <mesh
+        position={[d.frontAxleXmm * MM, (p.tireDiameterMm / 2) * MM, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <cylinderGeometry
+          args={[55 * MM, 55 * MM, (p.frontTrackMm + 160) * MM, 20]}
+        />
         <meshStandardMaterial color="#71808d" metalness={0.65} roughness={0.34} />
       </mesh>
 
-      <mesh position={[0, (p.tireDiameterMm / 2) * MM, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[55 * MM, 55 * MM, (p.rearTrackMm + 160) * MM, 20]} />
+      <mesh
+        position={[0, (p.tireDiameterMm / 2) * MM, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <cylinderGeometry
+          args={[55 * MM, 55 * MM, (p.rearTrackMm + 160) * MM, 20]}
+        />
         <meshStandardMaterial color="#71808d" metalness={0.65} roughness={0.34} />
       </mesh>
 
-      <Tire x={0} z={rearTrackHalf} diameter={p.tireDiameterMm} width={p.tireWidthMm} />
-      <Tire x={0} z={-rearTrackHalf} diameter={p.tireDiameterMm} width={p.tireWidthMm} />
-      <Tire x={d.frontAxleXmm} z={frontTrackHalf} diameter={p.tireDiameterMm} width={p.tireWidthMm} accent />
-      <Tire x={d.frontAxleXmm} z={-frontTrackHalf} diameter={p.tireDiameterMm} width={p.tireWidthMm} accent />
+      <Tire
+        x={0}
+        z={rearTrackHalf}
+        diameter={p.tireDiameterMm}
+        width={p.tireWidthMm}
+      />
+      <Tire
+        x={0}
+        z={-rearTrackHalf}
+        diameter={p.tireDiameterMm}
+        width={p.tireWidthMm}
+      />
+      <Tire
+        x={d.frontAxleXmm}
+        z={frontTrackHalf}
+        diameter={p.tireDiameterMm}
+        width={p.tireWidthMm}
+        accent
+      />
+      <Tire
+        x={d.frontAxleXmm}
+        z={-frontTrackHalf}
+        diameter={p.tireDiameterMm}
+        width={p.tireWidthMm}
+        accent
+      />
 
       {p.frontAxleOffsetMm !== 0 && (
         <>
@@ -140,16 +195,112 @@ function VehicleModel({ design }: { design: VehicleDesign }) {
           />
         </>
       )}
-
-      <mesh position={[d.frontAxleXmm * MM, 1.55, 0]}>
-        <boxGeometry args={[0.018, 3.1, 0.018]} />
-        <meshBasicMaterial color="#f4b84a" transparent opacity={0.65} />
-      </mesh>
     </group>
   );
 }
 
+function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
+  const geometry = useMemo(() => {
+    const result = new BufferGeometry();
+    const positions = new Float32Array(exact.positions.length);
+    const normals = new Float32Array(exact.normals.length);
+
+    // OCCT uses the canonical AutoBench axes: X forward, Y left, Z up.
+    // Three.js scene uses X forward, Y up, Z lateral.
+    for (let i = 0; i < exact.positions.length; i += 3) {
+      positions[i] = exact.positions[i] * MM;
+      positions[i + 1] = exact.positions[i + 2] * MM;
+      positions[i + 2] = exact.positions[i + 1] * MM;
+
+      normals[i] = exact.normals[i];
+      normals[i + 1] = exact.normals[i + 2];
+      normals[i + 2] = exact.normals[i + 1];
+    }
+
+    result.setAttribute("position", new BufferAttribute(positions, 3));
+    result.setAttribute("normal", new BufferAttribute(normals, 3));
+    result.setIndex(new BufferAttribute(exact.indices, 1));
+    result.computeBoundingSphere();
+    return result;
+  }, [exact]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial
+        color="#245277"
+        roughness={0.55}
+        metalness={0.22}
+      />
+    </mesh>
+  );
+}
+
+function DesignGuides({ design }: { design: VehicleDesign }) {
+  const p = design.parameters;
+  const d = deriveVehicle(design);
+  const frontTrackHalf = p.frontTrackMm / 2;
+
+  return (
+    <>
+      {p.frontAxleOffsetMm !== 0 && (
+        <>
+          <Tire
+            x={p.baselineWheelbaseMm}
+            z={frontTrackHalf}
+            diameter={p.tireDiameterMm}
+            width={p.tireWidthMm}
+            opacity={0.16}
+          />
+          <Tire
+            x={p.baselineWheelbaseMm}
+            z={-frontTrackHalf}
+            diameter={p.tireDiameterMm}
+            width={p.tireWidthMm}
+            opacity={0.16}
+          />
+        </>
+      )}
+      <mesh position={[d.frontAxleXmm * MM, 1.55, 0]}>
+        <boxGeometry args={[0.018, 3.1, 0.018]} />
+        <meshBasicMaterial color="#f4b84a" transparent opacity={0.7} />
+      </mesh>
+    </>
+  );
+}
+
 export function VehicleViewport({ design }: { design: VehicleDesign }) {
+  const [exact, setExact] = useState<ExactVehicleMesh | null>(null);
+  const [exactState, setExactState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setExactState("loading");
+      compileExactPops(design)
+        .then((result) => {
+          if (cancelled) return;
+          setExact(result);
+          setExactState("ready");
+        })
+        .catch((error) => {
+          if (cancelled) return;
+          console.error("Exact OCCT compile failed", error);
+          setExactState("error");
+        });
+    }, 120);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [design]);
+
+  const exactForRevision = exact?.revision === design.revision ? exact : null;
+
   return (
     <div className="viewport-shell">
       <Canvas
@@ -169,7 +320,12 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
         />
         <directionalLight position={[-5, 4, -5]} intensity={0.75} />
         <Suspense fallback={null}>
-          <VehicleModel design={design} />
+          {exactForRevision ? (
+            <ExactVehicleModel exact={exactForRevision} />
+          ) : (
+            <AnalyticalVehicleModel design={design} />
+          )}
+          <DesignGuides design={design} />
           <Grid
             args={[30, 30]}
             cellSize={0.5}
@@ -191,7 +347,13 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
           dampingFactor={0.08}
         />
       </Canvas>
-      <div className="viewport-badge">LIVE ANALYTICAL PREVIEW</div>
+      <div className="viewport-badge">
+        {exactState === "ready" && exactForRevision
+          ? `EXACT OCCT · ${exactForRevision.triangleCount.toLocaleString()} TRI`
+          : exactState === "error"
+            ? "ANALYTICAL FALLBACK · EXACT KERNEL ERROR"
+            : "ANALYTICAL FALLBACK · BUILDING EXACT OCCT"}
+      </div>
       <div className="axis-key">
         <span><b>X</b> forward</span>
         <span><b>Y</b> left</span>
