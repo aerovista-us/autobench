@@ -21,9 +21,8 @@ Every critical value must carry provenance:
 - `reference` — sourced from trusted documentation
 - `assumed` — temporary estimate
 - `designed` — intentional modification
-- `locked` — verified and protected from silent changes
 
-A value also carries confidence, units, source references, author, and revision.
+Lock state is **independent of provenance**. A measurement may simultaneously be `observed` and `locked`, or `scanDerived` and `locked`. Each value therefore carries provenance, confidence, a separate `locked` boolean, units, source references, author, and revision.
 
 ## Canonical model
 
@@ -112,7 +111,7 @@ Example operation:
 ```json
 {
   "type": "setParameter",
-  "target": "frontAxle.centerX",
+  "target": "frontAxleOffsetMm",
   "value": 254,
   "unit": "mm",
   "reason": "Move front axle forward 10 in from baseline"
@@ -122,13 +121,14 @@ Example operation:
 ### Required flow
 
 1. parse intent
-2. identify affected parameters and dependencies
-3. generate proposed operations
-4. compile a temporary candidate revision
-5. run impacted validations
-6. show geometric/measurement diff
-7. user accepts or rejects
-8. commit accepted operations to the design log
+2. resolve absolute vs delta intent into a canonical parameter operation (for example, +10 in becomes `frontAxleOffsetMm = 254`, not `frontAxle.centerX = 254`)
+3. identify affected parameters and dependencies
+4. generate proposed operations
+5. compile a temporary candidate revision
+6. run impacted validations
+7. show geometric/measurement diff
+8. user accepts or rejects
+9. commit accepted operations to the design log
 
 AI cannot alter a `locked` value without an explicit unlock operation.
 
