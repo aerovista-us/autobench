@@ -3,7 +3,7 @@ import {
   box,
   cylinder,
   exportAssemblySTEP,
-  getBoundingBox,
+  getBounds,
   init,
   mesh,
   unwrap,
@@ -167,18 +167,18 @@ async function compileScenario(design) {
   const fixture = buildScenario(design);
 
   try {
-    const bodyBounds = getBoundingBox(fixture.body);
-    const frontBounds = getBoundingBox(fixture.frontLeftTire);
-    const rearBounds = getBoundingBox(fixture.rearLeftTire);
+    const bodyBounds = getBounds(fixture.body);
+    const frontBounds = getBounds(fixture.frontLeftTire);
+    const rearBounds = getBounds(fixture.rearLeftTire);
 
     const metrics = {
-      frontAxleXmm: midpoint(frontBounds.min[0], frontBounds.max[0]),
-      rearAxleXmm: midpoint(rearBounds.min[0], rearBounds.max[0]),
+      frontAxleXmm: midpoint(frontBounds.xMin, frontBounds.xMax),
+      rearAxleXmm: midpoint(rearBounds.xMin, rearBounds.xMax),
       wheelbaseMm:
-        midpoint(frontBounds.min[0], frontBounds.max[0]) -
-        midpoint(rearBounds.min[0], rearBounds.max[0]),
-      bodyFrontXmm: bodyBounds.max[0],
-      bodyRearXmm: bodyBounds.min[0],
+        midpoint(frontBounds.xMin, frontBounds.xMax) -
+        midpoint(rearBounds.xMin, rearBounds.xMax),
+      bodyFrontXmm: bodyBounds.xMax,
+      bodyRearXmm: bodyBounds.xMin,
     };
 
     const meshStart = performance.now();
