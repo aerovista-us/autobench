@@ -246,3 +246,19 @@ async function compileInternal(
 
   return result;
 }
+
+
+/**
+ * Deterministic teardown for Node/CI callers.
+ * The browser workbench intentionally keeps the kernel cached between edits.
+ */
+export async function disposeExactKernel() {
+  await compileQueue;
+
+  if (!kernelPromise) return;
+
+  const kernel = await kernelPromise;
+  kernel[Symbol.dispose]();
+  kernelPromise = undefined;
+  compileQueue = Promise.resolve();
+}
