@@ -10,7 +10,8 @@ The canonical `VehicleDesign` and `GeometryEngine` contract stay independent of 
 
 | Kernel | Exact geometry | STEP | Browser fit | AI verification | M0 status |
 | --- | --- | --- | --- | --- | --- |
-| brepjs + occt-wasm | BREP / OCCT | Yes | TypeScript/WASM; browser integration still to prove | Strong CLI verification workflow | **Smoke PASS** |
+| occt-wasm direct | BREP / OCCT | Yes | **Production Chromium PASS** | Custom deterministic assertions | **Full Pops PASS** |
+| brepjs | BREP / OCCT | Yes | Browser-capable; full Pops path not yet run | Strong CLI verification workflow | **Frame-rail smoke PASS** |
 | Replicad + OpenCascade | BREP / OCCT | Yes | Strong browser/Node fit | Build our own fixture assertions | Pending |
 | OpenGeometry | Rust/WASM CAD kernel | Yes | Browser-native | Deterministic modeling API | Pending |
 
@@ -32,6 +33,31 @@ npx brep cad/m0-frame-rail.brep.ts \
 The exact-CAD step has passed. The workflow also passes AutoBench's analytical geometry tests and Next.js production build.
 
 CI publishes the STEP file and verification JSON as the `m0-exact-cad-artifacts` workflow artifact.
+
+## Completed direct occt-wasm Pops proof
+
+The shared baseline now lives in `data/pops-van.baseline.json` and is consumed by both the web workbench and the exact fixture.
+
+The direct `occt-wasm` compiler now proves baseline and +10 in scenarios with:
+
+- exact front/rear axle datums,
+- exact wheelbase,
+- preserved body front/rear envelope,
+- non-empty tessellation,
+- STEP export for both scenarios,
+- production Next.js build,
+- Chromium runtime initialization of the WASM kernel,
+- live UI candidate edit followed by a second exact rebuild.
+
+Latest proven values:
+
+- baseline wheelbase: **3175 mm**
+- +10 in wheelbase: **3429 mm**
+- moved front axle X: **3429 mm**
+- body front X remains: **4089 mm**
+- display mesh: **1,260 triangles** in both scenarios
+
+This proves the low-level OCCT browser path. It does not prove that the higher-level brepjs API should be the production authoring layer.
 
 ## Full Pops Van comparison fixture
 
@@ -96,6 +122,6 @@ A candidate is disqualified if it cannot reliably:
 
 ## Current conclusion
 
-**brepjs leads, but the decision is not locked.**
+**Direct occt-wasm currently leads on evidence, but the decision is not locked.**
 
-Its exact frame-rail proof is the first candidate to pass real AutoBench CI. Replicad and OpenGeometry still need the same Pops Van fixture before M0 can close.
+It is the first path to pass the full Pops fixture, STEP export, production browser/WASM runtime, and live +10 in rebuild. brepjs remains attractive for its higher-level authoring and verification ergonomics, but only its frame-rail CLI fixture is proven so far. Replicad and OpenGeometry still need the same Pops Van fixture before M0 can close.

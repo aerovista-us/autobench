@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke:browser": "node scripts/browser-smoke.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.9",
@@ -29,6 +30,7 @@
     "@types/three": "0.186.0",
     "typescript": "^5.9.0",
     "vitest": "5.0.3",
-    "brepjs-cad": "0.178.2"
+    "brepjs-cad": "0.178.2",
+    "playwright": "1.55.0"
   }
 }
