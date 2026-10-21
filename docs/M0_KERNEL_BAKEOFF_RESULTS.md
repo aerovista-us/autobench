@@ -214,3 +214,9 @@ This proof is the basis of the selected M0 architecture.
 4. update Issue #2 and close M0 only after those gates pass
 
 After that, move to M1 capture/calibration rather than adding more generic CAD surface area.
+
+## Dependency security checkpoint
+
+At exact-head CI on 2026-10-20, `npm audit --omit=dev` reported **0 high**, **0 critical**, and **2 moderate** advisories. Both moderate findings originate in the research-only `opengeometry@2.0.16` dependency and its transitive `uuid <11.1.1` dependency ([GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq)). npm reports no compatible fix through the current dependency graph.
+
+The CI audit summary now **fails** for high/critical production findings. The moderate research dependency is explicitly tracked in [Issue #5](https://github.com/aerovista-us/autobench/issues/5). The OpenGeometry research route and dependency **must be isolated or fixed before a customer-facing deployment**. M0 development merge does not constitute production authorization.
