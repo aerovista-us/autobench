@@ -23,7 +23,13 @@ jobs:
           node-version: 24
 
       - name: Install
-        run: npm install
+        run: npm ci
+
+      - name: Production dependency audit report
+        run: |
+          mkdir -p artifacts
+          npm audit --omit=dev --json > artifacts/npm-audit-production.json || true
+          node scripts/m0-audit-summary.mjs
 
       - name: Geometry tests
         run: npm test
@@ -36,15 +42,38 @@ jobs:
       - name: Exact Pops Van scenario verification
         run: node scripts/m0-exact-pops.mjs
 
+      - name: Replicad full Pops bake-off
+        run: node scripts/m0-replicad-pops.mjs
+
+      - name: brepjs full Pops bake-off
+        run: node scripts/m0-brepjs-pops.mjs
+
+      - name: Shared OCCT + brepjs kernel architecture smoke
+        run: node scripts/m0-shared-kernel-smoke.mjs
+
       - name: Upload exact CAD artifacts
         uses: actions/upload-artifact@v4
         with:
           name: m0-exact-cad-artifacts
-          path: artifacts/
+          path: |
+            artifacts/
+            package-lock.json
           if-no-files-found: error
 
       - name: Next build
         run: npm run build
+
+      - name: Runtime and bundle footprint
+        run: node scripts/m0-runtime-footprint.mjs
+
+      - name: Upload final runtime reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: m0-runtime-reports
+          path: |
+            artifacts/m0-runtime-footprint.json
+            artifacts/npm-audit-production.json
+          if-no-files-found: error
 
       - name: Install browser smoke dependency
         run: npx playwright install --with-deps chromium
@@ -63,3 +92,4 @@ jobs:
           done
 
           npm run smoke:browser
+          node scripts/bakeoff-browser-smoke.mjs

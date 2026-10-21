@@ -68,8 +68,8 @@ VehicleDesign JSON
 Typed feature compiler
       |
       v
-Selected GeometryEngine implementation
-(current M0 front-runner: brepjs / occt-wasm)
+Shared AutoBench geometry stack
+(direct occt-wasm kernel + brepjs authoring adapter)
       |
       +--> Three.js display mesh
       +--> STEP
@@ -243,7 +243,7 @@ Viewport overlays:
 
 ## Plans and drawings
 
-Phase 1: generate projections from the selected exact geometry engine where supported and overlay dimensions/annotations from the canonical model. Until the kernel bake-off is complete, analytical SVG projections remain explicitly labeled preview output.
+Phase 1: generate hidden-line projections from direct occt-wasm and overlay dimensions/annotations from the canonical model. Analytical SVG projections may remain available as a fast preview but must be labeled as such.
 
 Phase 2: send STEP + drawing manifest to a FreeCAD TechDraw worker for richer:
 
@@ -259,7 +259,7 @@ Phase 2: send STEP + drawing manifest to a FreeCAD TechDraw worker for richer:
 
 ### Accurate render
 
-Use tessellation derived from the committed geometry through Three.js/React Three Fiber with PBR materials, environment lighting, fixed camera presets, and saved view definitions. The current M0 viewport is an analytical preview while exact BREP browser integration is evaluated.
+Use tessellation derived from the committed BREP geometry through Three.js/React Three Fiber with PBR materials, environment lighting, fixed camera presets, and saved view definitions. The workbench may display an analytical fallback while the exact kernel rebuilds, but the exact OCCT mesh replaces it for the committed/current revision.
 
 ### High-quality render
 
@@ -316,14 +316,17 @@ Support branch/compare/restore early.
 7. all assumptions visible in the UI and export report
 
 
-## M0 kernel status
+## M0 geometry architecture decision
 
-AutoBench intentionally keeps the canonical `VehicleDesign` independent of a CAD implementation.
+The kernel bake-off is complete enough to lock the primary architecture.
 
-Current candidates:
+AutoBench uses **one direct `occt-wasm` kernel instance** as authoritative geometry truth. brepjs registers onto that same kernel through `OcctWasmAdapter.fromKernel(kernel)` and supplies the preferred typed/AI authoring and deterministic verification layer.
 
-- **brepjs + occt-wasm** — exact BREP smoke test passes in GitHub Actions, including declared-volume verification and STEP export. Current M0 front-runner.
-- **Replicad + OpenCascade** — installed candidate; browser/live fixture pending.
-- **OpenGeometry + Rust/WASM** — installed candidate; browser/live fixture pending.
+Responsibilities:
 
-The M0 gate remains open until all candidates are scored against the same Pops Van fixture. A successful frame-rail smoke test is evidence for brepjs, not permission to bypass the bake-off.
+- `VehicleDesign`: product/domain source of truth
+- brepjs: typed CAD feature authoring, explicit Result failures, AI verification
+- direct occt-wasm: exact BREP kernel access, HLR/projection, low-level measurement, XCAF/STEP capabilities
+- Three.js/R3F: disposable display mesh only
+
+Replicad and OpenGeometry passed meaningful Pops fixtures but are not selected as the primary production geometry path. See `docs/M0_KERNEL_BAKEOFF_RESULTS.md` for measured evidence and tradeoffs.

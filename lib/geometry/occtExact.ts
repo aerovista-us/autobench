@@ -1,4 +1,8 @@
 import type { VehicleDesign } from "../model/types";
+import {
+  disposeSharedGeometryRuntime,
+  getSharedGeometryRuntime,
+} from "./sharedKernelRuntime.ts";
 
 export interface ExactVehicleMetrics {
   frontAxleXmm: number;
@@ -25,19 +29,14 @@ export interface ExactVehicleMesh {
   triangleCount: number;
   metrics: ExactVehicleMetrics;
   step?: string;
+  projectionSvg?: string;
 }
 
-let kernelPromise: ReturnType<typeof createKernel> | undefined;
 let compileQueue: Promise<void> = Promise.resolve();
 
-async function createKernel() {
-  const { OcctKernel } = await import("occt-wasm");
-  return OcctKernel.init();
-}
-
 async function getKernel() {
-  kernelPromise ??= createKernel();
-  return kernelPromise;
+  const runtime = await getSharedGeometryRuntime();
+  return runtime.kernel;
 }
 
 function midpoint(min: number, max: number) {
@@ -46,7 +45,7 @@ function midpoint(min: number, max: number) {
 
 export function compileExactPops(
   design: VehicleDesign,
-  options: { exportStep?: boolean } = {},
+  options: { exportStep?: boolean; exportProjection?: boolean } = {},
 ): Promise<ExactVehicleMesh> {
   const run = compileQueue.then(() => compileInternal(design, options));
   compileQueue = run.then(
@@ -58,7 +57,7 @@ export function compileExactPops(
 
 async function compileInternal(
   design: VehicleDesign,
-  options: { exportStep?: boolean },
+  options: { exportStep?: boolean; exportProjection?: boolean },
 ): Promise<ExactVehicleMesh> {
   const kernel = await getKernel();
   kernel.releaseAll();
@@ -254,9 +253,18 @@ async function compileInternal(
     result.step = kernel.exportStep(assembly);
   }
 
+  if (options.exportProjection) {
+    result.projectionSvg = kernel.toMultiviewSVG(assembly);
+  }
+
   return result;
 }
 
+
+/** Initialize the cached exact kernel without compiling geometry. */
+export async function initializeExactKernel() {
+  await getKernel();
+}
 
 /**
  * Deterministic teardown for Node/CI callers.
@@ -264,11 +272,6 @@ async function compileInternal(
  */
 export async function disposeExactKernel() {
   await compileQueue;
-
-  if (!kernelPromise) return;
-
-  const kernel = await kernelPromise;
-  kernel[Symbol.dispose]();
-  kernelPromise = undefined;
+  await disposeSharedGeometryRuntime();
   compileQueue = Promise.resolve();
 }
