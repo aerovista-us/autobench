@@ -93,3 +93,4 @@ jobs:
 
           npm run smoke:browser
           node scripts/bakeoff-browser-smoke.mjs
+          node scripts/m1-capture-browser-smoke.mjs

@@ -76,7 +76,10 @@ export function AutoBench() {
       <section className="modebar">
         {["CAPTURE", "MODEL", "MODIFY", "VALIDATE", "PLAN", "RENDER"].map(
           (mode, index) => (
-            <button key={mode} className={index === 2 ? "active" : ""}>
+            <button key={mode} className={index === 2 ? "active" : ""}
+              disabled={mode !== "CAPTURE" && mode !== "MODIFY"}
+              title={mode !== "CAPTURE" && mode !== "MODIFY" ? "Planned mode" : undefined}
+              onClick={() => { if (mode === "CAPTURE") window.location.assign("/capture"); }}>
               {mode}
             </button>
           ),
