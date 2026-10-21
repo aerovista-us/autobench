@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p artifacts
           npm audit --omit=dev --json > artifacts/npm-audit-production.json || true
+          node scripts/m0-audit-summary.mjs
 
       - name: Geometry tests
         run: npm test
