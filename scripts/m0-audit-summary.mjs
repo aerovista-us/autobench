@@ -13,5 +13,5 @@ const issues = Object.entries(audit.vulnerabilities ?? {}).map(([name, entry]) =
 }));
 console.log("PRODUCTION AUDIT SUMMARY "+JSON.stringify({counts,issues},null,2));
 if ((counts.critical ?? 0) > 0 || (counts.high ?? 0) > 0) {
-  console.log("AUDIT ATTENTION REQUIRED: high/critical production vulnerabilities; inspect before merge.");
+  throw new Error("Production audit gate failed: high/critical vulnerabilities detected.");
 }
