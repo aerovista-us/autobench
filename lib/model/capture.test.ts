@@ -42,6 +42,25 @@ describe("M1 capture evidence", () => {
     expect(captureReadiness(draft).ready).toBe(true);
   });
 
+  it("rejects corrupted photo marker and scale data on JSON import", () => {
+    const draft = makeCaptureDraft();
+    draft.photos.push({
+      id: "side-1", view: "driver-side", reference: "side.png", notes: "",
+      widthPx: 800, heightPx: 400,
+      markers: [
+        { id: "a", label: "SCALE-A", x: 0.1, y: 0.5 },
+        { id: "b", label: "SCALE-B", x: 0.3, y: 0.5 },
+      ],
+      scale: { firstMarkerId: "a", secondMarkerId: "b", knownDistanceMm: 508 },
+    });
+    expect(parseCaptureDraft(JSON.stringify(draft)).photos[0].scale?.knownDistanceMm).toBe(508);
+    draft.photos[0].markers![1].x = Number.NaN;
+    expect(() => parseCaptureDraft(JSON.stringify(draft))).toThrow(/marker/);
+    draft.photos[0].markers![1].x = 0.3;
+    draft.photos[0].scale!.firstMarkerId = "missing";
+    expect(() => parseCaptureDraft(JSON.stringify(draft))).toThrow(/scale/);
+  });
+
   it("validates imported capture documents and rejects duplicate IDs", () => {
     const draft = makeCaptureDraft();
     expect(parseCaptureDraft(JSON.stringify(draft)).measurements.length).toBe(captureFields.length);

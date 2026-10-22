@@ -22,11 +22,29 @@ export interface CaptureMeasurement {
   locked: boolean;
 }
 
+export interface PhotoMarker {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+}
+
+export interface PhotoScale {
+  firstMarkerId: string;
+  secondMarkerId: string;
+  knownDistanceMm: number;
+}
+
 export interface CapturePhoto {
   id: string;
   view: PhotoView;
   reference: string;
   notes: string;
+  widthPx?: number;
+  heightPx?: number;
+  sha256?: string;
+  markers?: PhotoMarker[];
+  scale?: PhotoScale;
 }
 
 export interface CaptureDraft {
@@ -158,10 +176,48 @@ export function parseCaptureDraft(json: string): CaptureDraft {
       throw new Error(`Invalid capture field: ${measurement.id}`);
     }
   }
+  const photoIds = new Set<string>();
   for (const photo of draft.photos) {
-    if (!photo || typeof photo.id !== "string" || !photoViews.includes(photo.view) ||
-        typeof photo.reference !== "string" || typeof photo.notes !== "string") {
-      throw new Error("Invalid photo reference");
+    if (!photo || typeof photo.id !== "string" || !photo.id || photoIds.has(photo.id) ||
+        !photoViews.includes(photo.view) || typeof photo.reference !== "string" ||
+        typeof photo.notes !== "string") {
+      throw new Error("Invalid or duplicate photo reference");
+    }
+    photoIds.add(photo.id);
+    if ((photo.widthPx !== undefined && (!Number.isInteger(photo.widthPx) || photo.widthPx < 1 || photo.widthPx > 30000)) ||
+        (photo.heightPx !== undefined && (!Number.isInteger(photo.heightPx) || photo.heightPx < 1 || photo.heightPx > 30000))) {
+      throw new Error("Invalid photo dimensions");
+    }
+    if (photo.sha256 !== undefined && (typeof photo.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(photo.sha256))) {
+      throw new Error("Invalid photo SHA-256");
+    }
+    if (photo.markers !== undefined) {
+      if (!Array.isArray(photo.markers) || photo.markers.length > 100) throw new Error("Invalid marker list");
+      const markerIds = new Set<string>();
+      const labels = new Set<string>();
+      for (const marker of photo.markers) {
+        if (!marker || typeof marker.id !== "string" || !marker.id ||
+            typeof marker.label !== "string" || !marker.label || marker.label.length > 40 ||
+            markerIds.has(marker.id) || labels.has(marker.label) ||
+            !Number.isFinite(marker.x) || marker.x < 0 || marker.x > 1 ||
+            !Number.isFinite(marker.y) || marker.y < 0 || marker.y > 1) {
+          throw new Error("Invalid or duplicate photo marker");
+        }
+        markerIds.add(marker.id);
+        labels.add(marker.label);
+      }
+    }
+    if (photo.scale !== undefined) {
+      if (!photo.scale || !photo.markers ||
+          typeof photo.scale.firstMarkerId !== "string" ||
+          typeof photo.scale.secondMarkerId !== "string" ||
+          photo.scale.firstMarkerId === photo.scale.secondMarkerId ||
+          !photo.markers.some(m => m.id === photo.scale?.firstMarkerId) ||
+          !photo.markers.some(m => m.id === photo.scale?.secondMarkerId) ||
+          !Number.isFinite(photo.scale.knownDistanceMm) ||
+          photo.scale.knownDistanceMm <= 0 || photo.scale.knownDistanceMm > 100000) {
+        throw new Error("Invalid photo scale");
+      }
     }
   }
   return draft as CaptureDraft;

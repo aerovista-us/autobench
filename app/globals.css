@@ -658,3 +658,53 @@ input[type="range"] {
   .capture-form-grid { grid-template-columns:1fr; }
   .capture-field { min-height:44px; }
 }
+
+/* M1 photo and image-plane calibration workbench */
+.capture-photo-workspace { padding:26px; border-top:1px solid var(--line); background:#07121a; }
+.photo-calibration-board { max-width:1460px; margin:auto; }
+.photo-calibration-board > .capture-section-label { font-size:13px; color:var(--blue); }
+.photo-input-row { display:grid; grid-template-columns:minmax(180px,260px) minmax(280px,1fr); gap:16px; max-width:780px; margin:20px 0 12px; }
+.photo-reference-row { display:flex; gap:8px; max-width:780px; margin:12px 0; }
+.photo-reference-row input { flex:1; }
+.photo-reference-row button,.photo-calibration-heading button,.photo-marker-list button,.photo-scale-form button { border:1px solid var(--line-strong); border-radius:6px; padding:9px 12px; background:#102638; color:var(--text); cursor:pointer; }
+.photo-status { color:var(--amber); font-size:12px; line-height:1.5; }
+.photo-collection { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 22px; }
+.photo-collection-item { display:grid; gap:5px; text-align:left; min-width:180px; max-width:260px; flex:1; border:1px solid var(--line); border-radius:7px; padding:13px; background:#0b1a24; cursor:pointer; overflow-wrap:anywhere; }
+.photo-collection-item.selected { border-color:var(--blue); background:#11283a; }
+.photo-collection-item strong { font-size:12px; }
+.photo-collection-item span,.photo-collection-item small { color:var(--muted); font-size:11px; }
+.photo-calibration-editor { border:1px solid var(--line-strong); border-radius:9px; background:#0b151e; padding:20px; }
+.photo-calibration-heading { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-bottom:14px; overflow-wrap:anywhere; }
+.photo-calibration-heading strong { font-size:15px; }
+.photo-calibration-heading button { color:var(--red); }
+.photo-image-stage { position:relative; width:fit-content; max-width:100%; margin:auto; border:1px solid var(--line-strong); cursor:crosshair; }
+.photo-image-stage img { width:auto; max-width:100%; max-height:700px; height:auto; display:block; user-select:none; }
+.photo-marker { position:absolute; transform:translate(-50%,-50%); background:#f4b84a; color:#101820; border:2px solid #101820; border-radius:4px; font:700 10px ui-monospace,monospace; padding:5px; pointer-events:none; box-shadow:0 1px 6px #000a; white-space:nowrap; }
+.photo-image-missing { display:grid; justify-items:center; gap:20px; text-align:center; padding:48px 20px; border:1px dashed var(--line-strong); color:var(--muted); font-size:13px; }
+.photo-image-missing label { width:min(100%,360px); }
+.photo-marker-toolbar { display:flex; align-items:end; gap:20px; margin:20px 0; }
+.photo-marker-toolbar label { min-width:220px; }
+.photo-marker-toolbar p { max-width:480px; }
+.photo-marker-list { display:flex; flex-wrap:wrap; gap:7px; }
+.photo-marker-list > div { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:5px; padding:5px 8px; font-size:11px; }
+.photo-marker-list button { padding:4px 6px; color:var(--red); font-size:10px; }
+.photo-scale-form { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:24px; padding:20px; background:#0d202c; border:1px solid var(--line); border-radius:8px; }
+.photo-scale-form .capture-section-label,.photo-scale-form > p { grid-column:1/-1; margin:0; }
+.photo-scale-form button { align-self:end; min-height:42px; }
+.photo-scale-result { display:grid; gap:6px; margin-top:14px; padding:15px; border:1px solid var(--blue-dim); border-radius:7px; background:#0c2430; }
+.photo-scale-result strong { color:var(--green); font-size:15px; }
+.photo-scale-result span,.photo-scale-result p { font-size:12px; line-height:1.5; color:#9cb3c4; margin:0; }
+@media (max-width:800px) {
+  .capture-photo-workspace { padding:16px; }
+  .photo-input-row { grid-template-columns:1fr; }
+  .photo-scale-form { grid-template-columns:1fr 1fr; }
+  .photo-marker-toolbar { display:block; }
+}
+@media (max-width:520px) {
+  .photo-scale-form { grid-template-columns:1fr; }
+  .photo-calibration-editor { padding:12px; }
+  .photo-reference-row { flex-direction:column; }
+}
+
+.photo-replace-label { display:flex!important; align-items:center; gap:12px!important; flex-wrap:wrap; margin:10px 0 16px; color:var(--muted)!important; font-size:11px!important; }
+.photo-replace-label input { max-width:320px; }
