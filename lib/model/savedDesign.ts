@@ -6,7 +6,14 @@ import type { VehicleDesign } from "./types";
 
 const STORAGE_KEY = "autobench:pops-van:design:v1";
 const parameterKeys = Object.keys(popsVanBaseline.parameters) as Array<keyof VehicleDesign["parameters"]>;
-const conceptKeys = ["sideGlass","roofRack","sideSteps","rearSpare","auxiliaryLights","twoTone","bumper","shock","spring"] as const;
+const conceptAllowed: Record<string, readonly (string | boolean)[]> = {
+  sideGlass: ["conversion", "cargo", "porthole"],
+  roofRack: [true, false], sideSteps: [true, false], rearSpare: [true, false],
+  auxiliaryLights: [true, false], twoTone: [true, false],
+  bumper: ["chrome-stock", "plate-trail", "winch-plate", "brush-guard"],
+  shock: ["unverified", "monotube", "remote-reservoir"],
+  spring: ["unverified", "leaf-service", "heavy-duty-leaf"],
+};
 
 /** Reject malformed or foreign stored data rather than silently using it as engineering evidence. */
 export function parseStoredDesign(raw: string | null): VehicleDesign | null {
@@ -18,14 +25,14 @@ export function parseStoredDesign(raw: string | null): VehicleDesign | null {
     if (value.id !== popsVanBaseline.id || value.units !== "mm" ||
       !Number.isSafeInteger(value.revision) || value.revision! < popsVanBaseline.revision ||
       !value.parameters || typeof value.parameters !== "object" ||
-      !Array.isArray(value.measurements) || !Array.isArray(value.operationLog)) return null;
+      !Array.isArray(value.measurements) || !Array.isArray(value.operationLog) || value.operationLog.length > 300 || (value.conceptHistory?.length ?? 0) > 300) return null;
     for (const key of parameterKeys) {
       const n = value.parameters[key];
       if (typeof n !== "number" || !Number.isFinite(n) || n < 0 || n > 100_000) return null;
     }
     if (value.conceptOptions) {
       for (const key of Object.keys(value.conceptOptions)) {
-        if (!conceptKeys.includes(key as typeof conceptKeys[number])) return null;
+        if (!conceptAllowed[key]?.includes(value.conceptOptions[key as keyof typeof value.conceptOptions])) return null;
       }
     }
     // Measurement records remain the checked-in baseline until an evidence-aware
