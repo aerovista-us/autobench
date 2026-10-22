@@ -60,3 +60,7 @@ Open `/` for the 3D model, `/capture` for actual Pops Van measurement/photo evid
 **Photo privacy and backups:** image bytes are stored in the current browser's IndexedDB only. Capture JSON includes filenames, measurements, marker positions and scales, **not the image bytes**. Keep your original photos separately; reattach them after importing JSON on another browser. No cloud upload or automatic apply-to-model is implemented.
 
 **Build safety:** This is an exploratory design and evidence workbench, not a structural, steering, suspension, brake, roadworthiness or fabrication certification.
+
+### M4 · Classic van identity and exterior packages
+
+AutoBench now offers Classic van (default), Cargo, Camper and Expedition BREP exterior presets; rounded side-window cutouts, side/rear doors, roof contour, two-tone side sweep, roof rack, steps, rear spare and auxiliary lights. Four camera views and exact STEP export are supported. See [M4 exterior engineering brief](docs/M4_VAN_IDENTITY_EXTERIOR.md). **Reference-only styling; no physical modification approval.**

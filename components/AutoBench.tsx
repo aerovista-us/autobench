@@ -6,8 +6,9 @@ import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
 import { INCH, popsVanBaseline } from "@/lib/model/popsVan";
 import { setVehicleParameter } from "@/lib/model/operations";
-import { resolveConceptOptions, setVehicleConceptOption, conceptCautions } from "@/lib/model/conceptOptions";
-import type { VehicleConceptOptions } from "@/lib/model/conceptOptions";
+import { resolveConceptOptions, setVehicleConceptOption, conceptCautions,
+  applyExteriorPreset, currentExteriorPreset, exteriorPresets } from "@/lib/model/conceptOptions";
+import type { VehicleConceptOptions, ExteriorPreset } from "@/lib/model/conceptOptions";
 import { createSideProjectionSvg } from "@/lib/export/sideProjection";
 import { kernelScorecard } from "@/lib/geometry/kernelRegistry";
 import type { VehicleDesign } from "@/lib/model/types";
@@ -28,6 +29,7 @@ export function AutoBench() {
   const [design, setDesign] = useState<VehicleDesign>(popsVanBaseline);
   const [inspectSuspension, setInspectSuspension] = useState(false);
   const concepts = resolveConceptOptions(design);
+  const exteriorPreset = currentExteriorPreset(design);
   function setConcept<K extends keyof VehicleConceptOptions>(key: K, value: VehicleConceptOptions[K]) {
     setDesign(current => setVehicleConceptOption(current, key, value));
   }
@@ -115,7 +117,9 @@ export function AutoBench() {
             <div className="tree-leaf">◇ Main envelope</div>
             <div className="tree-leaf">◇ Front clip</div>
             <div className="tree-leaf">◇ Bumper · {concepts.bumper}</div>
-            <div className="tree-leaf">◇ Contoured roof / raked cab</div>
+            <div className="tree-leaf">◇ Rounded roof / raked cab</div>
+            <div className="tree-leaf">◇ Exterior · {exteriorPreset}</div>
+            <div className="tree-leaf">◇ Side glazing · {concepts.sideGlass}</div>
             <div className="tree-child">▾ Front suspension concepts</div>
             <div className="tree-leaf">◇ Shocks · {concepts.shock}</div>
             <div className="tree-leaf">◇ Springs · {concepts.spring}</div>
@@ -236,6 +240,48 @@ export function AutoBench() {
               <div className="range-ends"><span>{min} in</span><span>{max} in</span></div>
             </div>
           ))}
+          <div className="panel-heading spaced">
+            <span>EXTERIOR / VAN IDENTITY</span>
+            <small>switchable CAD · not measured</small>
+          </div>
+          <div className="exterior-preset-grid" aria-label="Exterior presets">
+            {(Object.keys(exteriorPresets) as ExteriorPreset[]).map(name => (
+              <button key={name} type="button" aria-pressed={exteriorPreset === name}
+                className={exteriorPreset === name ? "active" : ""}
+                onClick={() => setDesign(current => applyExteriorPreset(current, name))}>
+                {name === "cargo" ? "Cargo" : name === "classic" ? "Classic van" :
+                  name === "camper" ? "Camper" : "Expedition"}
+              </button>
+            ))}
+          </div>
+          <div className="concept-options exterior-options">
+            <label>
+              <span>Side glazing</span>
+              <select aria-label="Side window configuration" value={concepts.sideGlass}
+                onChange={event => setConcept("sideGlass",
+                  event.target.value as VehicleConceptOptions["sideGlass"])}>
+                <option value="conversion">Conversion van · side windows</option>
+                <option value="cargo">Cargo · solid side panels</option>
+                <option value="porthole">Camper · rear portholes</option>
+              </select>
+            </label>
+            {([
+              ["twoTone", "Two-tone side sweep"],
+              ["roofRack", "Roof rack concept"],
+              ["sideSteps", "Side entry steps"],
+              ["rearSpare", "Rear-mounted spare concept"],
+              ["auxiliaryLights", "Auxiliary front lights"],
+            ] as const).map(([key, label]) => (
+              <label className="concept-visibility" key={key}>
+                <input type="checkbox" aria-label={label} checked={concepts[key]}
+                  onChange={event => setConcept(key, event.target.checked)} />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="microcopy">Concept parts export with the same OCCT assembly.
+            Window cuts, accessory mounts and weights require physical verification.</p>
+
           <div className="panel-heading spaced">
             <span>FRONT-END CONCEPTS</span>
             <small>no fitment approval</small>

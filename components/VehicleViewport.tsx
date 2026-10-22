@@ -1,9 +1,10 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
 import { BufferAttribute, BufferGeometry } from "three";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentRef } from "react";
 import type { VehicleDesign } from "@/lib/model/types";
 import { deriveVehicle } from "@/lib/model/derive";
 import {
@@ -11,6 +12,7 @@ import {
   type ExactVehicleMesh,
 } from "@/lib/geometry/occtExact";
 
+type ViewAngle = "front" | "side" | "rear" | "top";
 const MM = 1 / 1000;
 const sceneZ = (canonicalY: number) => -canonicalY;
 
@@ -239,6 +241,7 @@ function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMe
     steel: { color: "#647381", roughness: 0.6, metalness: 0.7 },
     light: { color: "#f3e9cf", roughness: 0.23, metalness: 0.15 },
     suspension: { color: "#e6a143", roughness: 0.42, metalness: 0.35 },
+    accent: { color: "#36789a", roughness: 0.4, metalness: 0.2 },
   } as const;
 
   return (
@@ -285,10 +288,30 @@ function DesignGuides({ design }: { design: VehicleDesign }) {
   );
 }
 
+function ViewCameraControls({ view, compact }: { view: ViewAngle; compact: boolean }) {
+  const { camera } = useThree();
+  const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  useEffect(() => {
+    const positions: Record<ViewAngle, [number, number, number]> = {
+      front: compact ? [10.8, 4.6, 12.0] : [9.6, 4.1, 11.2],
+      side: compact ? [1.3, 3.2, 15.5] : [1.3, 3.0, 12.8],
+      rear: compact ? [-10.5, 4.6, 11.5] : [-8.6, 4.1, 10.8],
+      top: compact ? [1.3, 18, 0.4] : [1.3, 15.5, 0.4],
+    };
+    camera.position.set(...positions[view]);
+    controls.current?.target.set(1.3, 1.15, 0);
+    controls.current?.update();
+  }, [camera, compact, view]);
+  return <OrbitControls ref={controls} target={[1.3, 1.15, 0]}
+    minDistance={3} maxDistance={compact ? 30 : 22}
+    enableDamping dampingFactor={0.08} />;
+}
+
 export function VehicleViewport({ design, inspectSuspension = false }: {
   design: VehicleDesign; inspectSuspension?: boolean;
 }) {
   const [compact, setCompact] = useState(false);
+  const [view, setView] = useState<ViewAngle>("front");
   const [exact, setExact] = useState<ExactVehicleMesh | null>(null);
   const [exactState, setExactState] = useState<
     "loading" | "ready" | "error"
@@ -329,9 +352,9 @@ export function VehicleViewport({ design, inspectSuspension = false }: {
   return (
     <div className="viewport-shell" data-inspection-mode={inspectSuspension ? "chassis" : "full"}>
       <Canvas
-        key={compact ? "front-clip-mobile" : "full-vehicle-desktop"}
+        key={compact ? "mobile" : "desktop"}
         shadows
-        camera={{ position: compact ? [9.5, 4.1, 10.5] : [7.1, 3.3, 8.1],
+        camera={{ position: compact ? [10.8, 4.6, 12.0] : [9.6, 4.1, 11.2],
           fov: 39, near: 0.1, far: 100 }}
         dpr={[1, 1.6]}
       >
@@ -366,14 +389,15 @@ export function VehicleViewport({ design, inspectSuspension = false }: {
             infiniteGrid
           />
         </Suspense>
-        <OrbitControls
-          target={compact ? [3.1, 1.1, 0] : [1.3, 1.1, 0]}
-          minDistance={3}
-          maxDistance={compact ? 30 : 18}
-          enableDamping
-          dampingFactor={0.08}
-        />
+        <ViewCameraControls view={view} compact={compact} />
       </Canvas>
+      <div className="viewport-view-buttons" role="group" aria-label="Vehicle camera views">
+        {(["front", "side", "rear", "top"] as const).map(angle => (
+          <button type="button" key={angle} aria-pressed={view === angle}
+            onClick={() => setView(angle)}>{angle === "front" ? "3/4 FRONT" :
+              angle === "side" ? "SIDE" : angle === "rear" ? "3/4 REAR" : "TOP"}</button>
+        ))}
+      </div>
       <div className="viewport-badge" data-testid="exact-status"
         data-revision={exactForRevision?.revision ?? ""}>
         {exactState === "ready" && exactForRevision

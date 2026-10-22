@@ -48,6 +48,9 @@ jobs:
       - name: M3 body and aftermarket-style CAD package validation
         run: node scripts/m3-upgrade-cad-smoke.mjs
 
+      - name: M4 van identity and exterior feature CAD validation
+        run: node scripts/m4-van-identity-cad-smoke.mjs
+
       - name: Replicad full Pops bake-off
         run: node scripts/m0-replicad-pops.mjs
 
@@ -104,6 +107,7 @@ jobs:
           node scripts/m1-visual-reference-browser-smoke.mjs
           node scripts/m2-front-clip-browser-smoke.mjs
           node scripts/m3-upgrades-browser-smoke.mjs
+          node scripts/m4-van-identity-browser-smoke.mjs
 
       - name: Upload M1 photo calibration browser proof
         uses: actions/upload-artifact@v4
@@ -130,4 +134,18 @@ jobs:
             artifacts/m3-winch-reservoir-leaf-inspection.png
             artifacts/m3-brush-guard-body-size.png
             artifacts/m3-mobile-upgrades.png
+          if-no-files-found: error
+
+      - name: Upload M4 van identity browser proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: m4-van-identity-exterior-browser
+          path: |
+            artifacts/m4-classic-van-front.png
+            artifacts/m4-classic-van-side.png
+            artifacts/m4-classic-van-rear.png
+            artifacts/m4-camper-portholes-rack.png
+            artifacts/m4-expedition-spare-rack.png
+            artifacts/m4-custom-top.png
+            artifacts/m4-mobile-expedition.png
           if-no-files-found: error
