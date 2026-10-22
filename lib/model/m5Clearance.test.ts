@@ -21,4 +21,22 @@ describe("M5 clearance scenario", () => {
     expect(result.status).not.toBe("provisional");
     expect(result.missingEvidence.length).toBeGreaterThan(0);
   });
+  it("reports worse projected longitudinal clearance when axle moves forward", () => {
+    const original = calculateM5Clearance(popsVanBaseline, {...popsM5Scenario, frontAxleOffsetIn: 0});
+    const moved = calculateM5Clearance(popsVanBaseline, popsM5Scenario);
+    expect(moved.longitudinalClearanceMm).toBeCloseTo(original.longitudinalClearanceMm - 254, 6);
+  });
+  it("retains locked measurement records even for a conflicting scenario", () => {
+    const design = structuredClone(popsVanBaseline);
+    design.measurements[0].locked = true;
+    design.measurements[0].confidence = "verified";
+    const snapshot = JSON.stringify(design);
+    calculateM5Clearance(design, popsM5Scenario);
+    expect(JSON.stringify(design)).toEqual(snapshot);
+  });
+  it("rejects invalid steering and tire dimensions rather than producing a misleading result", () => {
+    expect(() => calculateM5Clearance(popsVanBaseline, {...popsM5Scenario, steeringDeg: 120})).toThrow();
+    expect(() => calculateM5Clearance(popsVanBaseline, {...popsM5Scenario, tireDiameterIn: 0})).toThrow();
+  });
+
 });
