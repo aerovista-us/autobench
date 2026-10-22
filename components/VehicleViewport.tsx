@@ -221,19 +221,31 @@ function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
     result.setAttribute("position", new BufferAttribute(positions, 3));
     result.setAttribute("normal", new BufferAttribute(normals, 3));
     result.setIndex(new BufferAttribute(exact.indices, 1));
+    exact.materialGroups.forEach((group, index) => {
+      result.addGroup(group.start, group.count, index);
+    });
     result.computeBoundingSphere();
     return result;
   }, [exact]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
+  const finishes = {
+    body: { color: "#316da4", roughness: 0.4, metalness: 0.16 },
+    chrome: { color: "#e0e8f0", roughness: 0.3, metalness: 0.65 },
+    dark: { color: "#313b47", roughness: 0.75, metalness: 0.08 },
+    glass: { color: "#183b53", roughness: 0.18, metalness: 0.12 },
+    rubber: { color: "#2d3138", roughness: 0.96, metalness: 0.01 },
+    steel: { color: "#647381", roughness: 0.6, metalness: 0.7 },
+    light: { color: "#f3e9cf", roughness: 0.23, metalness: 0.15 },
+  } as const;
+
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial
-        color="#245277"
-        roughness={0.55}
-        metalness={0.22}
-      />
+      {exact.materialGroups.map((group, index) => (
+        <meshStandardMaterial key={group.material} attach={`material-${index}`}
+          {...finishes[group.material]} />
+      ))}
     </mesh>
   );
 }
@@ -272,10 +284,18 @@ function DesignGuides({ design }: { design: VehicleDesign }) {
 }
 
 export function VehicleViewport({ design }: { design: VehicleDesign }) {
+  const [compact, setCompact] = useState(false);
   const [exact, setExact] = useState<ExactVehicleMesh | null>(null);
   const [exactState, setExactState] = useState<
     "loading" | "ready" | "error"
   >("loading");
+
+  useEffect(() => {
+    const update = () => setCompact(window.innerWidth < 840);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -305,21 +325,23 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
   return (
     <div className="viewport-shell">
       <Canvas
+        key={compact ? "front-clip-mobile" : "full-vehicle-desktop"}
         shadows
-        camera={{ position: [6.7, 4.3, 7.2], fov: 39, near: 0.1, far: 100 }}
+        camera={{ position: compact ? [8.3, 4.6, 9.0] : [5.7, 3.8, 6.2],
+          fov: 39, near: 0.1, far: 100 }}
         dpr={[1, 1.6]}
       >
         <color attach="background" args={["#071019"]} />
         <fog attach="fog" args={["#071019", 11, 23]} />
-        <ambientLight intensity={0.55} />
+        <ambientLight intensity={1.0} />
         <directionalLight
           position={[4, 9, 6]}
-          intensity={2.4}
+          intensity={3.2}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
-        <directionalLight position={[-5, 4, -5]} intensity={0.75} />
+        <directionalLight position={[-5, 4, -5]} intensity={1.4} />
         <Suspense fallback={null}>
           {exactForRevision ? (
             <ExactVehicleModel exact={exactForRevision} />
@@ -341,16 +363,16 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
           />
         </Suspense>
         <OrbitControls
-          target={[1.3, 1.1, 0]}
+          target={compact ? [3.1, 1.1, 0] : [1.3, 1.1, 0]}
           minDistance={3}
-          maxDistance={18}
+          maxDistance={compact ? 30 : 18}
           enableDamping
           dampingFactor={0.08}
         />
       </Canvas>
       <div className="viewport-badge">
         {exactState === "ready" && exactForRevision
-          ? `EXACT OCCT · ${exactForRevision.triangleCount.toLocaleString()} TRI`
+          ? `EXACT OCCT · ${exactForRevision.triangleCount.toLocaleString()} TRI · PROVISIONAL DIMENSIONS`
           : exactState === "error"
             ? "ANALYTICAL FALLBACK · EXACT KERNEL ERROR"
             : "ANALYTICAL FALLBACK · BUILDING EXACT OCCT"}
