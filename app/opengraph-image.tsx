@@ -8,7 +8,7 @@ export const contentType = "image/png";
 export default function OpenGraphImage() {
   return new ImageResponse(
     <div style={{display:"flex",width:"100%",height:"100%",background:"linear-gradient(135deg,#08131f 0%,#123249 55%,#071018 100%)",color:"#f0f7fc",padding:65,fontFamily:"sans-serif",position:"relative",overflow:"hidden"}}>
-      <div style={{display:"flex",flexDirection:"column",justifyContent:"space-between",width:"62%",zIndex:2}}>
+      <div style={{display:"flex",flexDirection:"column",justifyContent:"space-between",width:"62%"}}>
         <div style={{display:"flex",alignItems:"center",gap:16,fontSize:24,letterSpacing:4,color:"#80c7ef"}}>
           <div style={{display:"flex",padding:"10px 14px",border:"2px solid #80c7ef",borderRadius:10,fontWeight:800}}>AV</div>
           AEROVISTA / AUTOBENCH
