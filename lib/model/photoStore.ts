@@ -20,8 +20,10 @@ async function transact<T>(mode: IDBTransactionMode, action: (store: IDBObjectSt
     return await new Promise<T>((resolve, reject) => {
       const tx = db.transaction(STORE, mode);
       const request = action(tx.objectStore(STORE));
-      request.onsuccess = () => resolve(request.result);
+      let result!: T;
+      request.onsuccess = () => { result = request.result; };
       request.onerror = () => reject(request.error ?? new Error("Photo storage failed"));
+      tx.oncomplete = () => resolve(result);
       tx.onerror = () => reject(tx.error ?? new Error("Photo transaction failed"));
       tx.onabort = () => reject(tx.error ?? new Error("Photo transaction aborted"));
     });

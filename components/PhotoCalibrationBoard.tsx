@@ -96,7 +96,9 @@ export function PhotoCalibrationBoard({
       onUpdatePhoto({ ...selected, reference: file.name, ...dimensions });
       setAttachmentVersion(v => v + 1);
       setMessage(expected
-        ? "Original image reattached; saved markers and scale were preserved."
+        ? (expected.sha256
+          ? "Verified original image reattached; saved markers and scale were preserved."
+          : "Image matched filename and dimensions only. Verify saved markers before using the scale.")
         : "Image attached to filename-only reference. You can now place markers.");
     } catch (error) {
       setMessage(`Reattachment rejected: ${String(error)}`);
