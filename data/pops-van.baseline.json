@@ -47,5 +47,23 @@
       "source": "Replace from actual tire measurement"
     }
   ],
-  "operationLog": []
+  "operationLog": [],
+  "visualReferences": [
+    {
+      "referenceId": "1986-g10-front-three-quarter",
+      "role": "styling-only",
+      "targetAssembly": "front-clip",
+      "imagePath": "/references/1986-chevrolet-g10-gr-auto-gallery.jpg",
+      "guidePath": "/references/g10-1986",
+      "designCueIds": [
+        "grille",
+        "lamps",
+        "hood",
+        "bumper",
+        "arch",
+        "beltline"
+      ],
+      "note": "Reference G10 is not Pops Van. Use for front-end visual identity only; never for dimensions, capture evidence or unreviewed geometry edits."
+    }
+  ]
 }

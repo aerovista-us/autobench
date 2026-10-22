@@ -93,6 +93,7 @@ export function CaptureWorkbench() {
           <p>Replace provisional dimensions with measured evidence. Nothing here authorizes fabrication.</p>
         </div>
         <div className="capture-top-actions">
+          <a href="/references/g10-1986">1986 G10 styling reference</a>
           <a href="/">Return to model</a>
           <button onClick={save} disabled={!hydrated}>Save locally</button>
           <button onClick={() => downloadJson(draft)}>Export JSON</button>
