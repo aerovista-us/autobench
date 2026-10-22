@@ -110,7 +110,9 @@ export const frontAxleScenarioInches = [0, 8, 10, 12, 14] as const;
 export function parseFrontAxleScenario(value: string | null): FrontAxleScenarioInches {
   if (value === null || value.trim() === "") return 10;
   const n = Number(value);
-  return frontAxleScenarioInches.includes(n as FrontAxleScenarioInches)
-    ? (n as FrontAxleScenarioInches)
-    : 10;
+  if (!Number.isFinite(n) || n < 0 || n > 14) return 10;
+  return frontAxleScenarioInches.reduce<FrontAxleScenarioInches>(
+    (nearest, candidate) => Math.abs(candidate - n) < Math.abs(nearest - n) ? candidate : nearest,
+    frontAxleScenarioInches[0],
+  );
 }

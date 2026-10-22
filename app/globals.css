@@ -782,3 +782,5 @@ input[type="range"] {
  .reference-pin { width:23px; height:23px; }
  .reference-scenario-picker button { min-width:80px; }
 }
+
+.reference-offset-notice { margin:0 18px 16px; padding:12px 14px; border:1px solid #7b6238; border-radius:6px; background:#292113; color:#f0d7a6; font-size:12px; line-height:1.55; }

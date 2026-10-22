@@ -21,8 +21,14 @@ try {
   }
   await page.getByRole("button", { name: "Show design cue: Rounded front wheel opening" }).click();
   await page.getByRole("heading", { name: "Rounded front wheel opening" }).waitFor();
+  await page.goto(`${base}/references/g10-1986?offset=12.5`, { waitUntil: "networkidle" });
+  await page.getByRole("status").getByText(/Workbench offset was \+12.5 in/).waitFor();
+  if (!(await page.getByRole("button", { name: "+12 in" }).getAttribute("aria-pressed") === "true")) {
+    throw new Error("Non-preset offset did not choose nearest supported scenario");
+  }
   await page.getByRole("button", { name: "+10 in" }).click();
   await page.getByRole("heading", { name: "Preferred first concept" }).waitFor();
+  if (await page.getByRole("status").count()) throw new Error("Offset snap warning not cleared on explicit selection");
   await page.getByRole("button", { name: "Baseline" }).click();
   await page.getByRole("heading", { name: "Factory-style baseline" }).waitFor();
 

@@ -37,7 +37,10 @@ describe("G10 front-end visual reference", () => {
   it("rejects unsupported offsets for the reference guide", () => {
     expect(parseFrontAxleScenario("8")).toBe(8);
     expect(parseFrontAxleScenario("10")).toBe(10);
-    expect(parseFrontAxleScenario("13")).toBe(10);
+    expect(parseFrontAxleScenario("13")).toBe(12);
+    expect(parseFrontAxleScenario("12.5")).toBe(12);
+    expect(parseFrontAxleScenario("9.5")).toBe(10);
+    expect(parseFrontAxleScenario("15")).toBe(10);
     expect(parseFrontAxleScenario(null)).toBe(10);
   });
 });

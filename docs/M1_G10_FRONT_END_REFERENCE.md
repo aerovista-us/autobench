@@ -19,7 +19,7 @@
 5. Rounded front wheel arch: adapt to axle-forward geometry, tire sweep and clearance instead of stretching the photo.
 6. Long clean beltline: maintain continuity into the modified front fenders.
 
-The page offers baseline, +8, +10, +12 and +14-inch design guides. +10 inches is the **first design priority**, not an approved fitment.
+The page offers baseline, +8, +10, +12 and +14-inch design guides. +10 inches is the **first design priority**, not an approved fitment. When opened from a non-preset workbench offset (such as +12.5 inches), the guide selects the nearest supported preset and displays an explicit warning that its displayed model numbers are **not** for the exact workbench offset.
 
 ## Strict authority boundaries
 

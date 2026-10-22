@@ -11,11 +11,17 @@ import { setVehicleParameter } from "@/lib/model/operations";
 
 export function FrontEndReferenceGuide() {
   const [scenario, setScenario] = useState<FrontAxleScenarioInches>(10);
+  const [requestedOffset, setRequestedOffset] = useState<number | null>(null);
   const [selectedCue, setSelectedCue] = useState(g10FrontReference.designCues[0].id);
   const [showMarkers, setShowMarkers] = useState(true);
 
   useEffect(() => {
-    setScenario(parseFrontAxleScenario(new URLSearchParams(window.location.search).get("offset")));
+    const raw = new URLSearchParams(window.location.search).get("offset");
+    const nearest = parseFrontAxleScenario(raw);
+    setScenario(nearest);
+    const requested = raw !== null && raw.trim() !== "" ? Number(raw) : Number.NaN;
+    setRequestedOffset(Number.isFinite(requested) && requested >= 0 && requested <= 14 &&
+      requested !== nearest ? requested : null);
   }, []);
 
   const selected = g10FrontReference.designCues.find(cue => cue.id === selectedCue)!;
@@ -127,10 +133,17 @@ export function FrontEndReferenceGuide() {
             <button key={inches}
               className={scenario === inches ? "selected" : ""}
               aria-pressed={scenario === inches}
-              onClick={() => setScenario(inches)}
+              onClick={() => { setScenario(inches); setRequestedOffset(null); }}
             >{inches === 0 ? "Baseline" : `+${inches} in`}</button>
           ))}
         </div>
+        {requestedOffset !== null && (
+          <p className="reference-offset-notice" role="status">
+            Workbench offset was +{requestedOffset.toFixed(1)} in. This guide is showing the nearest
+            supported styling preset (+{scenario} in), <strong>not the exact same geometry</strong>.
+            The original workbench design was not changed.
+          </p>
+        )}
         <div className="reference-scenario-detail">
           <div className="reference-scenario-copy">
             <div className="reference-kicker">{scenario === 10 ? "INITIAL DESIGN PRIORITY" : "ALTERNATIVE STUDY"}</div>
