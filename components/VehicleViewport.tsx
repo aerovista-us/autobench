@@ -231,7 +231,7 @@ function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMe
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   const finishes = {
-    body: { color: "#316da4", roughness: 0.4, metalness: 0.16 },
+    body: { color: "#194773", roughness: 0.32, metalness: 0.24 },
     chrome: { color: "#e0e8f0", roughness: 0.3, metalness: 0.65 },
     dark: { color: "#313b47", roughness: 0.75, metalness: 0.08 },
     glass: { color: "#183b53", roughness: 0.18, metalness: 0.12 },
@@ -331,21 +331,21 @@ export function VehicleViewport({ design, inspectSuspension = false }: {
       <Canvas
         key={compact ? "front-clip-mobile" : "full-vehicle-desktop"}
         shadows
-        camera={{ position: compact ? [8.3, 4.6, 9.0] : [5.7, 3.8, 6.2],
+        camera={{ position: compact ? [9.5, 4.1, 10.5] : [7.1, 3.3, 8.1],
           fov: 39, near: 0.1, far: 100 }}
         dpr={[1, 1.6]}
       >
         <color attach="background" args={["#071019"]} />
         <fog attach="fog" args={["#071019", 11, 23]} />
-        <ambientLight intensity={1.0} />
+        <ambientLight intensity={0.8} />
         <directionalLight
           position={[4, 9, 6]}
-          intensity={3.2}
+          intensity={2.1}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
-        <directionalLight position={[-5, 4, -5]} intensity={1.4} />
+        <directionalLight position={[-5, 4, -5]} intensity={0.9} />
         <Suspense fallback={null}>
           {exactForRevision ? (
             <ExactVehicleModel exact={exactForRevision} inspectSuspension={inspectSuspension} />
