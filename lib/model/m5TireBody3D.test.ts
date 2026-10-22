@@ -15,3 +15,28 @@ describe("M5 measured 3D mesh screen",()=>{
     expect(checkTireBody3D(mesh,pose).status).toBe("no-surface-intersection-detected");
   });
 });
+
+
+function closedCube(cx:number,cy:number,cz:number,half:number){
+  const verticesMm:number[]=[];
+  for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1])
+    verticesMm.push(cx+x*half,cy+y*half,cz+z*half);
+  // Vertex id = x*4+y*2+z. All six faces triangulated.
+  const faces=[[0,1,3,2],[4,6,7,5],[0,4,5,1],[2,3,7,6],[0,2,6,4],[1,5,7,3]];
+  const triangleIndices=faces.flatMap(([a,b,c,d])=>[a,b,c,a,c,d]);
+  return {verticesMm,triangleIndices,source:"synthetic closed mesh regression fixture",measured:true};
+}
+describe("M5 closed-body-mesh regression fixtures (synthetic, not Pops measurements)",()=>{
+  it("detects a closed box crossing the tire",()=>{
+    expect(checkTireBody3D(closedCube(45,0,0,12),pose).status).toBe("intersection");
+  });
+  it("does not report a collision for a distant closed box",()=>{
+    expect(checkTireBody3D(closedCube(1000,1000,1000,20),pose).status).toBe("no-surface-intersection-detected");
+  });
+  it("detects a closed box completely enclosing the tire",()=>{
+    expect(checkTireBody3D(closedCube(0,0,0,150),pose).status).toBe("intersection");
+  });
+  it("detects a small closed box entirely within the tire",()=>{
+    expect(checkTireBody3D(closedCube(0,0,0,5),pose).status).toBe("intersection");
+  });
+});
