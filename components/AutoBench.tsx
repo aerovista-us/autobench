@@ -121,6 +121,7 @@ export function AutoBench() {
             <div className="tree-leaf">◇ Exterior · {exteriorPreset}</div>
             <div className="tree-leaf">◇ Side glazing · {concepts.sideGlass}</div>
             <div className="tree-child">▾ Front suspension concepts</div>
+            <a className="tree-leaf reference-tree-link" href="/m5-clearance">◇ M5 Suspension &amp; Clearance Lab →</a>
             <div className="tree-leaf">◇ Shocks · {concepts.shock}</div>
             <div className="tree-leaf">◇ Springs · {concepts.spring}</div>
           </nav>
