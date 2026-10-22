@@ -1,6 +1,7 @@
 import type { VehicleDesign } from "../model/types";
 import { buildFrontClipCad, type CadMaterial } from "./frontClipCad.ts";
 import { frontClipSpec } from "./frontClipSpec.ts";
+import { resolveConceptOptions } from "../model/conceptOptions.ts";
 import { buildFrontSuspensionConcept } from "./upgradeConceptCad.ts";
 import {
   disposeSharedGeometryRuntime,
@@ -8,6 +9,13 @@ import {
 } from "./sharedKernelRuntime.ts";
 
 export interface ExactVehicleMetrics {
+  bodyIdentity: {
+    sideGlass: "conversion" | "cargo" | "porthole";
+    leftSidePanelVolumeMm3: number;
+    rightSidePanelVolumeMm3: number;
+    rearClosureVolumeMm3: number;
+    accessoryPartCount: number;
+  };
   frontAxleXmm: number;
   rearAxleXmm: number;
   wheelbaseMm: number;
@@ -227,7 +235,7 @@ async function compileInternal(
 
   // Preserve material boundaries from distinct exact BREP parts. The STEP and
   // exact measurements use the same assembly, not the display tessellation.
-  const materials: CadMaterial[] = ["body", "chrome", "dark", "glass", "rubber", "steel", "light", "suspension"];
+  const materials: CadMaterial[] = ["body", "chrome", "dark", "glass", "rubber", "steel", "light", "suspension", "accent"];
   const positionChunks: Float32Array[] = [];
   const normalChunks: Float32Array[] = [];
   const indexChunks: Uint32Array[] = [];
@@ -279,6 +287,9 @@ async function compileInternal(
   const rearDatumPart = bodyCad.parts.find(part => part.name === "rear-closure");
   if (!rearDatumPart) throw new Error("Missing rear body closure datum");
   const rearDatumBounds = kernel.getBoundingBox(rearDatumPart.shape);
+  const leftPanel = bodyCad.parts.find(part => part.name === "left-shaped-cabin-panel");
+  const rightPanel = bodyCad.parts.find(part => part.name === "right-shaped-cabin-panel");
+  if (!leftPanel || !rightPanel) throw new Error("Missing van side BREP panels");
   const frontTireBounds = kernel.getBoundingBox(frontLeftTire);
   const rearTireBounds = kernel.getBoundingBox(rearLeftTire);
   const measuredFrontAxleX = midpoint(frontTireBounds.xmin, frontTireBounds.xmax);
@@ -300,6 +311,14 @@ async function compileInternal(
     triangleCount: indices.length / 3,
     partNames: allParts.map(part => part.name),
     metrics: {
+      bodyIdentity: {
+        sideGlass: resolveConceptOptions(design).sideGlass,
+        leftSidePanelVolumeMm3: kernel.getVolume(leftPanel.shape),
+        rightSidePanelVolumeMm3: kernel.getVolume(rightPanel.shape),
+        rearClosureVolumeMm3: kernel.getVolume(rearDatumPart.shape),
+        accessoryPartCount: bodyCad.parts.filter(part =>
+          /^(?:roof-rack-crossbar-|(?:left|right)-(?:roof-rack-rail|rack-foot-|entry-step|step-bracket-)|rear-(?:door-spare-tire-envelope|spare-carrier-mount-envelope)|front-(?:left|right)-aux-lamp-)/.test(part.name)).length,
+      },
       frontAxleXmm: measuredFrontAxleX,
       rearAxleXmm: measuredRearAxleX,
       wheelbaseMm: measuredFrontAxleX - measuredRearAxleX,

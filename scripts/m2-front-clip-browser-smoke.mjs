@@ -27,7 +27,7 @@ const fixture = (mismatch = false) => ({
 try {
   await page.goto(base, { waitUntil: "networkidle" });
   await page.getByText(/EXACT OCCT · [0-9,]+ TRI/).waitFor({ timeout: 90_000 });
-  await page.getByRole("heading", { name: /G10 body · hood · fenders/ }).waitFor();
+  await page.getByRole("heading", { name: /G10 body · hood · fenders|G-series van · glazing · doors/ }).waitFor();
   await page.getByText("BLOCKED · NO COMPLETE MEASUREMENTS").waitFor();
   await page.getByRole("button", { name: "Axle +10\"" }).click();
   await page.getByText("+10.0 in", { exact: true }).waitFor();
@@ -69,7 +69,7 @@ try {
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.goto(base, { waitUntil: "networkidle" });
-  await mobile.getByRole("heading", { name: /G10 body · hood · fenders/ }).waitFor();
+  await mobile.getByRole("heading", { name: /G10 body · hood · fenders|G-series van · glazing · doors/ }).waitFor();
   await mobile.getByText(/EXACT OCCT · [0-9,]+ TRI/).waitFor({ timeout: 90_000 });
   const overflow = await mobile.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (overflow > 2) throw new Error(`Mobile horizontal overflow: ${overflow}px`);

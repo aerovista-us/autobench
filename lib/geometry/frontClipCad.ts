@@ -3,8 +3,9 @@ import type { VehicleDesign } from "../model/types";
 import { frontClipSpec } from "./frontClipSpec.ts";
 import { buildRefinedCabin } from "./bodyContourCad.ts";
 import { buildBumperConcept } from "./upgradeConceptCad.ts";
+import { buildVanExteriorFeatures } from "./vanExteriorCad.ts";
 
-export type CadMaterial = "body" | "chrome" | "dark" | "glass" | "rubber" | "steel" | "light" | "suspension";
+export type CadMaterial = "body" | "chrome" | "dark" | "glass" | "rubber" | "steel" | "light" | "suspension" | "accent";
 type Kernel = Awaited<ReturnType<typeof OcctKernel.init>>;
 type Handle = ReturnType<Kernel["makeBox"]>;
 
@@ -117,6 +118,15 @@ export function buildFrontClipCad(kernel: Kernel, design: VehicleDesign): FrontC
   add("front-fascia", "body", box(nose - 16, -halfW + 80,
     p.groundClearanceMm + 780, nose + 18, halfW - 80,
     p.groundClearanceMm + 1280));
+  // The previous open gap beneath the grille made the nose look like a
+  // commercial box chassis. A separate lower steel valance visually connects
+  // the front fenders to the bumper while retaining independent CAD parts.
+  add("front-lower-valance", "body", box(nose - 15, -halfW + 90,
+    p.groundClearanceMm + 255, nose + 19, halfW - 90,
+    p.groundClearanceMm + 785));
+  add("front-valance-chrome-divider", "chrome", box(nose + 20, -halfW + 105,
+    p.groundClearanceMm + 765, nose + 37, halfW - 105,
+    p.groundClearanceMm + 783));
   add("recessed-grille", "dark", box(nose + 19, -565,
     p.groundClearanceMm + 850, nose + 42, 565, p.groundClearanceMm + 1220));
   for (let i = 0; i < 6; i++) {
@@ -141,6 +151,7 @@ export function buildFrontClipCad(kernel: Kernel, design: VehicleDesign): FrontC
   }
 
   parts.push(...buildBumperConcept(kernel, design));
+  parts.push(...buildVanExteriorFeatures(kernel, design));
   const bodyDatum = add("front-body-datum", "body",
     box(nose - 12, -halfW + 80, p.groundClearanceMm + 1270,
       nose, halfW - 80, p.groundClearanceMm + 1290));

@@ -1,6 +1,7 @@
 import type { OcctKernel } from "occt-wasm";
 import type { VehicleDesign } from "../model/types";
 import { frontClipSpec } from "./frontClipSpec.ts";
+import { resolveConceptOptions } from "../model/conceptOptions.ts";
 import type { NamedCadPart, CadMaterial } from "./frontClipCad";
 
 type Kernel = Awaited<ReturnType<typeof OcctKernel.init>>;
@@ -26,6 +27,7 @@ function yzSolid(kernel: Kernel, profile: { y: number; z: number }[], x: number,
 export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
   frontArch: Handle, rearArch: Handle): NamedCadPart[] {
   const p = design.parameters;
+  const choices = resolveConceptOptions(design);
   const s = frontClipSpec(design);
   const halfW = p.bodyWidthMm / 2;
   const roofZ = p.groundClearanceMm + p.bodyHeightMm;
@@ -52,6 +54,47 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
     { x: cab - 1130, z: roofZ - 210 },
   ];
   const windowCutter = xzSolid(kernel, windowProfile, -halfW - 75, p.bodyWidthMm + 150);
+  // Passenger/conversion glazing is cut through the same exact side BREP.
+  // A cargo variant retains the sheet metal; portholes are 16-sided cutouts.
+  const roundedPane = (left: number, right: number, bottom: number, top: number, corner = 80): XZ[] => {
+    // Rounded corners in exact BREP using a segmented sketch, rather than
+    // the former eight-sided polygon that read like a cartoon window.
+    const corners = [
+      { x: right - corner, z: bottom + corner, start: -Math.PI / 2 },
+      { x: right - corner, z: top - corner, start: 0 },
+      { x: left + corner, z: top - corner, start: Math.PI / 2 },
+      { x: left + corner, z: bottom + corner, start: Math.PI },
+    ];
+    return corners.flatMap(c => Array.from({ length: 5 }, (_, i) => {
+      const angle = c.start + i * Math.PI / 8;
+      return { x: c.x + Math.cos(angle) * corner,
+        z: c.z + Math.sin(angle) * corner };
+    }));
+  };
+  const sidePanes: { name: string; profile: XZ[] }[] = [];
+  if (choices.sideGlass === "conversion") {
+    sidePanes.push({ name: "sliding-door", profile: roundedPane(480, 1820,
+      roofZ - 835, roofZ - 230, 75) });
+    sidePanes.push({ name: "rear-quarter", profile: roundedPane(rear + 205, -170,
+      roofZ - 825, roofZ - 235, 75) });
+  } else if (choices.sideGlass === "porthole") {
+    const radius = 220;
+    const centerX = rear + 710;
+    const centerZ = roofZ - 530;
+    sidePanes.push({ name: "rear-porthole", profile: Array.from({ length: 16 }, (_, i) => {
+      const angle = Math.PI * 2 * i / 16;
+      return { x: centerX + Math.cos(angle) * radius,
+        z: centerZ + Math.sin(angle) * radius };
+    }) });
+  }
+  const sidePaneCutters = sidePanes.map(pane =>
+    xzSolid(kernel, pane.profile, -halfW - 75, p.bodyWidthMm + 150));
+  const rearCornerCutter = xzSolid(kernel, [
+    { x: rear - 95, z: roofZ + 65 },
+    { x: rear + 170, z: roofZ + 65 },
+    { x: rear - 95, z: roofZ - 430 },
+  ], -halfW - 90, p.bodyWidthMm + 180);
+
 
   for (const side of [-1, 1]) {
     const y1 = side > 0 ? halfW - 58 : -halfW;
@@ -59,12 +102,29 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
     const panel = box(rear, y1, p.groundClearanceMm + 30,
       cab, y2, roofZ - 115);
     add(side > 0 ? "left-shaped-cabin-panel" : "right-shaped-cabin-panel", "body",
-      archCut(kernel.cut(kernel.cut(panel, rakeCutter), windowCutter)));
+      kernel.cutAll(panel, [frontArch, rearArch, rakeCutter,
+        rearCornerCutter, windowCutter, ...sidePaneCutters]));
 
     const outerY = side > 0 ? halfW + 4 : -halfW - 20;
     add(side > 0 ? "left-cutout-side-glass" : "right-cutout-side-glass", "glass",
       xzSolid(kernel, windowProfile, outerY, 16));
 
+    for (const pane of sidePanes) {
+      const frameY = side > 0 ? halfW + 5 : -halfW - 25;
+      const paneY = side > 0 ? halfW + 12 : -halfW - 18;
+      const centerX = pane.profile.reduce((sum, point) => sum + point.x, 0) / pane.profile.length;
+      const centerZ = pane.profile.reduce((sum, point) => sum + point.z, 0) / pane.profile.length;
+      const surround = pane.profile.map(point => ({
+        x: centerX + (point.x - centerX) * 1.065,
+        z: centerZ + (point.z - centerZ) * 1.065,
+      }));
+      const inner = xzSolid(kernel, pane.profile, frameY - 1, 34);
+      const outer = xzSolid(kernel, surround, frameY, 32);
+      add(`${side > 0 ? "left" : "right"}-${pane.name}-window-surround`, "dark",
+        kernel.cut(outer, inner));
+      add(`${side > 0 ? "left" : "right"}-${pane.name}-window-glass`, "glass",
+        xzSolid(kernel, pane.profile, paneY, 15));
+    }
     const trimY = side > 0 ? halfW + 7 : -halfW - 16;
     add(side > 0 ? "left-upper-window-frame" : "right-upper-window-frame", "dark",
       box(cab - 1160, trimY, roofZ - 222, cab - 290, trimY + 10, roofZ - 195));
@@ -100,6 +160,31 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
         roofZ - 925, cab - 225, side > 0 ? halfW + 220 : -halfW - 120,
         roofZ - 735));
 
+    // Actual side-door definition is crucial: an unbroken cargo wall reads as
+    // a panel truck even with the right front clip. The passenger side has
+    // a large sliding-door aperture/track; the other side has a panel seam.
+    for (const x of [350, 1950]) {
+      add(`${side > 0 ? "left" : "right"}-sliding-door-seam-${x}`, "dark",
+        box(x, trimY, p.groundClearanceMm + 345,
+          x + 9, trimY + 11, roofZ - 890));
+    }
+    add(`${side > 0 ? "left" : "right"}-sliding-door-bottom-seam`, "dark",
+      box(350, trimY, p.groundClearanceMm + 335,
+        1960, trimY + 11, p.groundClearanceMm + 345));
+    add(`${side > 0 ? "left" : "right"}-sliding-door-track`, "chrome",
+      box(335, trimY, roofZ - 930, 1970, trimY + 14, roofZ - 917));
+    add(`${side > 0 ? "left" : "right"}-sliding-door-handle`, "chrome",
+      box(1690, trimY + 11, roofZ - 1065,
+        1830, trimY + 31, roofZ - 1037));
+    if (choices.twoTone) {
+      add(`${side > 0 ? "left" : "right"}-two-tone-side-sweep`, "accent",
+        archCut(box(rear + 105, trimY + 3, p.groundClearanceMm + 1130,
+          cab - 100, trimY + 19, p.groundClearanceMm + 1190)));
+    }
+    // A gently stepped shoulder creates a visible side contour, not a slab.
+    add(`${side > 0 ? "left" : "right"}-upper-side-shoulder`, "body",
+      box(rear + 150, trimY - 9, roofZ - 1170,
+        cab - 145, trimY + 8, roofZ - 1115));
     add(side > 0 ? "left-beltline" : "right-beltline", "chrome",
       box(rear + 100, trimY, p.groundClearanceMm + 1230,
         cab - 120, trimY + 10, p.groundClearanceMm + 1246));
@@ -110,17 +195,21 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
 
   // Beveled roof shoulders and forward taper replace the M2 sharp slab roof.
   const roofEnd = cab - 240;
-  add("roof-crown", "body", box(rear + 30, -halfW + 115, roofZ - 88,
-    roofEnd, halfW - 115, roofZ - 12));
+  const roofStart = rear + 110;
+  add("roof-crown", "body", box(roofStart, -halfW + 155, roofZ - 88,
+    roofEnd, halfW - 155, roofZ - 12));
   for (const side of [-1, 1]) {
     const shoulder = [
-      { y: side * (halfW - 115), z: roofZ - 12 },
-      { y: side * (halfW - 35), z: roofZ - 37 },
-      { y: side * halfW, z: roofZ - 115 },
-      { y: side * (halfW - 115), z: roofZ - 115 },
+      { y: side * (halfW - 155), z: roofZ - 12 },
+      { y: side * (halfW - 118), z: roofZ - 17 },
+      { y: side * (halfW - 78), z: roofZ - 33 },
+      { y: side * (halfW - 40), z: roofZ - 61 },
+      { y: side * (halfW - 12), z: roofZ - 96 },
+      { y: side * halfW, z: roofZ - 135 },
+      { y: side * (halfW - 155), z: roofZ - 135 },
     ];
     add(side > 0 ? "left-roof-shoulder" : "right-roof-shoulder", "body",
-      yzSolid(kernel, shoulder, rear + 30, roofEnd - rear - 30));
+      yzSolid(kernel, shoulder, roofStart, roofEnd - roofStart));
   }
   add("raked-front-roof-brow", "body", xzSolid(kernel, [
     { x: roofEnd - 30, z: roofZ - 118 },
@@ -131,8 +220,9 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
   add("cabin-floor", "body", archCut(box(rear + 40, -halfW + 65,
     p.groundClearanceMm + 570, cab - 50, halfW - 65,
     p.groundClearanceMm + 635)));
-  add("rear-closure", "body", box(rear, -halfW + 58,
-    p.groundClearanceMm + 635, rear + 58, halfW - 58, roofZ - 125));
+  add("rear-closure", "body", kernel.cut(
+    box(rear, -halfW + 58, p.groundClearanceMm + 635,
+      rear + 58, halfW - 58, roofZ - 125), rearCornerCutter));
 
   // Windshield glass is a sloping extrusion with matching narrow pillar rails.
   const windshieldProfile: XZ[] = [

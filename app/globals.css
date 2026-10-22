@@ -836,3 +836,20 @@ input[type="range"] {
 .concept-visibility input { accent-color:#f1b34b; width:17px; height:17px; }
 .concept-safety { border-color:#604e32; }
 .concept-safety p { font-size:11px; line-height:1.5; }
+
+/* M4 vehicle identity: preset-driven van styling, not a fixed panel-truck slab */
+.exterior-preset-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:13px 0 5px; }
+.exterior-preset-grid button { min-width:0; padding:10px 6px; border:1px solid var(--line-strong);
+  background:#0d2334; color:#bdcbd7; border-radius:6px; font-size:11px; cursor:pointer; }
+.exterior-preset-grid button.active, .exterior-preset-grid button[aria-pressed="true"] {
+  border-color:#dfac5a; color:#f4d29d; background:#28342f; }
+.exterior-preset-grid button:focus-visible { outline:2px solid #f4b84a; outline-offset:2px; }
+.exterior-options { border-bottom:1px solid var(--line); margin-bottom:10px; }
+.viewport-view-buttons { position:absolute; top:14px; left:14px; display:flex; flex-wrap:wrap; gap:5px;
+  z-index:3; max-width:calc(100% - 28px); }
+.viewport-view-buttons button { background:rgba(8,23,34,.87); color:#bdcbd7;
+  border:1px solid #3d5364; border-radius:4px; font-size:10px; padding:7px 9px; cursor:pointer; }
+.viewport-view-buttons button[aria-pressed="true"] { border-color:#e5b35d; color:#f5d398; }
+.viewport-view-buttons button:focus-visible { outline:2px solid #f5d398; outline-offset:2px; }
+@media(max-width:500px) { .viewport-view-buttons { top:8px; left:8px; }
+  .viewport-view-buttons button { font-size:9px; padding:6px; } }
