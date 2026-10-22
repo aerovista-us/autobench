@@ -87,9 +87,9 @@ export function FrontClipReviewPanel({ design }: { design: VehicleDesign }) {
     <section className="front-clip-review" aria-label="Front clip CAD and measured capture review">
       <div className="front-review-heading">
         <div>
-          <span>PARAMETRIC FRONT CLIP / M3 BODY & UPGRADE CONCEPTS</span>
-          <h2>G10 body · hood · fenders · grille · bumper</h2>
-          <p>Contoured roof and cab, revised body proportions, axle-driven wheel arches, selectable bumper and front suspension CAD. Provisional dimensions until measured capture.</p>
+          <span>PARAMETRIC FRONT CLIP / M4 VAN IDENTITY & EXTERIOR</span>
+          <h2>G-series van · glazing · doors · exterior packages</h2>
+          <p>Rounded roof shoulders, actual side-window BREP cutouts, sliding and rear doors, axle-driven arches, and switchable exterior accessories. All dimensions remain provisional until Pops Van capture.</p>
         </div>
         <a href="/references/g10-1986">Styling targets ↗</a>
       </div>
