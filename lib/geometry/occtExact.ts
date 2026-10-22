@@ -40,7 +40,7 @@ export interface ExactVehicleMesh {
   positions: Float32Array;
   normals: Float32Array;
   indices: Uint32Array;
-  materialGroups: { material: CadMaterial; start: number; count: number }[];
+  materialGroups: { material: CadMaterial; start: number; count: number; inspectionVisible: boolean }[];
   triangleCount: number;
   partNames: string[];
   metrics: ExactVehicleMetrics;
@@ -234,19 +234,31 @@ async function compileInternal(
   const materialGroups: ExactVehicleMesh["materialGroups"] = [];
   let vertexOffset = 0;
   let indexOffset = 0;
+  // Inspection is based on *part identity*, not shared paint/material. This
+  // excludes trail/winch bumpers while retaining chrome rims and dark lug nuts.
+  const isChassisInspectionPart = (name: string) =>
+    /(?:^|-)frame-rail$/.test(name) ||
+    name === "front-axle" || name === "rear-axle" ||
+    /-(?:tire|silver-wheel-face|center-cap|rim-bead-ring)$/.test(name) ||
+    /-lug-\d+$/.test(name) ||
+    /(?:spring-leaf|spring-eye-envelope|shock-envelope|shock-upper-mount|reservoir-envelope)/.test(name);
   for (const material of materials) {
-    const shapes = allParts.filter(part => part.material === material).map(part => part.shape);
-    if (!shapes.length) continue;
-    const groupShape = kernel.makeCompound(shapes);
-    const mesh = kernel.tessellate(groupShape, { linearDeflection: 4, angularDeflection: 0.25 });
-    positionChunks.push(mesh.positions.slice());
-    normalChunks.push(mesh.normals.slice());
-    const shifted = new Uint32Array(mesh.indices.length);
-    for (let i = 0; i < shifted.length; i++) shifted[i] = mesh.indices[i] + vertexOffset;
-    indexChunks.push(shifted);
-    materialGroups.push({ material, start: indexOffset, count: shifted.length });
-    vertexOffset += mesh.positions.length / 3;
-    indexOffset += shifted.length;
+    for (const inspectionVisible of [false, true]) {
+      const shapes = allParts.filter(part =>
+        part.material === material && isChassisInspectionPart(part.name) === inspectionVisible,
+      ).map(part => part.shape);
+      if (!shapes.length) continue;
+      const groupShape = kernel.makeCompound(shapes);
+      const mesh = kernel.tessellate(groupShape, { linearDeflection: 4, angularDeflection: 0.25 });
+      positionChunks.push(mesh.positions.slice());
+      normalChunks.push(mesh.normals.slice());
+      const shifted = new Uint32Array(mesh.indices.length);
+      for (let i = 0; i < shifted.length; i++) shifted[i] = mesh.indices[i] + vertexOffset;
+      indexChunks.push(shifted);
+      materialGroups.push({ material, start: indexOffset, count: shifted.length, inspectionVisible });
+      vertexOffset += mesh.positions.length / 3;
+      indexOffset += shifted.length;
+    }
   }
   const positions = new Float32Array(vertexOffset * 3);
   const normals = new Float32Array(vertexOffset * 3);

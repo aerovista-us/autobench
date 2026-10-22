@@ -8,28 +8,35 @@ const errors = [];
 const page = await browser.newPage({ viewport: { width: 1660, height: 1120 }, acceptDownloads: true });
 page.on("pageerror", error => errors.push(error.message));
 page.on("console", msg => { if (msg.type() === "error") errors.push(msg.text()); });
-const exact = page.getByText(/EXACT OCCT · [0-9,]+ TRI/);
-const waitExact = async () => {
-  await exact.waitFor({ timeout: 90_000 });
-  await page.waitForTimeout(600);
+// Wait for the *new revision's* exact mesh, not a stale OCCT badge left
+// visible before the 120 ms compile debounce / asynchronous kernel queue.
+const waitExact = async (previousRevision = null, target = page) => {
+  await target.waitForFunction(previous => {
+    const badge = document.querySelector('[data-testid="exact-status"]');
+    const revision = badge?.getAttribute("data-revision");
+    return revision && (previous === null || revision !== previous) &&
+      badge?.textContent?.includes("EXACT OCCT");
+  }, previousRevision, { timeout: 90_000 });
+  return await target.getByTestId("exact-status").getAttribute("data-revision");
 };
 
 try {
   await page.goto(base, { waitUntil: "networkidle" });
-  await waitExact();
+  let revision = await waitExact();
   await page.getByLabel("Front bumper concept").selectOption("plate-trail");
-  await waitExact();
+  revision = await waitExact(revision);
   await page.screenshot({ path: "artifacts/m3-steel-bumper-contoured-body.png", fullPage: true });
 
   await page.getByLabel("Front bumper concept").selectOption("winch-plate");
-  await waitExact();
+  revision = await waitExact(revision);
   await page.getByLabel("Front shock concept").selectOption("remote-reservoir");
-  await waitExact();
+  revision = await waitExact(revision);
   await page.getByLabel("Front spring concept").selectOption("heavy-duty-leaf");
-  await waitExact();
+  revision = await waitExact(revision);
   await page.getByText("Parts and mount compatibility").waitFor();
   await page.getByText("UNVERIFIED", { exact: true }).waitFor();
   await page.getByLabel("Isolate chassis and suspension CAD").check();
+  await page.locator('[data-inspection-mode="chassis"]').waitFor();
   await page.screenshot({ path: "artifacts/m3-winch-reservoir-leaf-inspection.png", fullPage: true });
 
   const manifest = page.waitForEvent("download");
@@ -52,7 +59,7 @@ try {
     element.dispatchEvent(new Event("input", { bubbles: true }));
     element.dispatchEvent(new Event("change", { bubbles: true }));
   });
-  await waitExact();
+  revision = await waitExact(revision);
   const sized = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export design JSON" }).click();
   const sizeManifest = JSON.parse(await fs.readFile(await (await sized).path(), "utf8"));
@@ -60,13 +67,14 @@ try {
     throw new Error("Body width slider did not update canonical design");
   }
   await page.getByLabel("Front bumper concept").selectOption("brush-guard");
-  await waitExact();
+  revision = await waitExact(revision);
   await page.screenshot({ path: "artifacts/m3-brush-guard-body-size.png", fullPage: true });
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await mobile.goto(base, { waitUntil: "networkidle" });
+  const mobileRevision = await waitExact(null, mobile);
   await mobile.getByLabel("Front bumper concept").selectOption("plate-trail");
-  await mobile.getByText(/EXACT OCCT · [0-9,]+ TRI/).waitFor({ timeout: 90_000 });
+  await waitExact(mobileRevision, mobile);
   const overflow = await mobile.evaluate(() => document.documentElement.scrollWidth - innerWidth);
   if (overflow > 2) throw new Error(`Mobile overflow: ${overflow}px`);
   await mobile.screenshot({ path: "artifacts/m3-mobile-upgrades.png", fullPage: true });

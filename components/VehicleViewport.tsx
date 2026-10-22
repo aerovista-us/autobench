@@ -244,9 +244,9 @@ function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMe
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
       {exact.materialGroups.map((group, index) => (
-        <meshStandardMaterial key={group.material} attach={`material-${index}`}
+        <meshStandardMaterial key={`${group.material}-${index}`} attach={`material-${index}`}
           {...finishes[group.material]}
-          visible={!inspectSuspension || ["steel", "suspension", "rubber"].includes(group.material)} />
+          visible={!inspectSuspension || group.inspectionVisible} />
       ))}
     </mesh>
   );
@@ -327,7 +327,7 @@ export function VehicleViewport({ design, inspectSuspension = false }: {
   const exactForRevision = exact?.revision === design.revision ? exact : null;
 
   return (
-    <div className="viewport-shell">
+    <div className="viewport-shell" data-inspection-mode={inspectSuspension ? "chassis" : "full"}>
       <Canvas
         key={compact ? "front-clip-mobile" : "full-vehicle-desktop"}
         shadows
@@ -374,7 +374,8 @@ export function VehicleViewport({ design, inspectSuspension = false }: {
           dampingFactor={0.08}
         />
       </Canvas>
-      <div className="viewport-badge">
+      <div className="viewport-badge" data-testid="exact-status"
+        data-revision={exactForRevision?.revision ?? ""}>
         {exactState === "ready" && exactForRevision
           ? `EXACT OCCT · ${exactForRevision.triangleCount.toLocaleString()} TRI · PROVISIONAL DIMENSIONS`
           : exactState === "error"

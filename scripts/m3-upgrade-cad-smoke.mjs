@@ -60,6 +60,14 @@ try {
       design.parameters.baselineWheelbaseMm + design.parameters.frontAxleOffsetMm, "wheelbase");
     if (exact.triangleCount < 2500) throw new Error("CAD tessellation unexpectedly coarse");
     if (scenario.name === "winch") {
+      for (const material of ["steel", "chrome", "dark"]) {
+        const groups = exact.materialGroups.filter(g => g.material === material);
+        if (!groups.some(g => g.inspectionVisible) || !groups.some(g => !g.inspectionVisible)) {
+          throw new Error(`Inspection failed to separate ${material} chassis parts from body/bumper parts`);
+        }
+      }
+    }
+    if (scenario.name === "winch") {
       if (!exact.step?.includes("ISO-10303-21")) throw new Error("Winch + suspension STEP failed");
       await writeFile("artifacts/pops-m3-winch-suspension-CONCEPT.step", exact.step);
     }
