@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CAPTURE_STORAGE_KEY, parseCaptureDraft, type CaptureDraft } from "@/lib/model/capture";
 import { checkFrontClipAgainstCapture } from "@/lib/geometry/frontClipCapture";
 import { frontClipSpec } from "@/lib/geometry/frontClipSpec";
+import { resolveConceptOptions } from "@/lib/model/conceptOptions";
 import { compileExactPops } from "@/lib/geometry/occtExact";
 import type { VehicleDesign } from "@/lib/model/types";
 
@@ -71,6 +72,12 @@ export function FrontClipReviewPanel({ design }: { design: VehicleDesign }) {
       JSON.stringify({
         schemaVersion: 1, vehicleId: design.id, revision: design.revision,
         frontClip: spec, captureReview: review,
+        conceptOptions: resolveConceptOptions(design),
+        provisionalBodyDimensionsMm: {
+          width: design.parameters.bodyWidthMm,
+          height: design.parameters.bodyHeightMm,
+          rearOverhang: design.parameters.rearOverhangMm,
+        },
         source: "G10 styling-only reference 1986-g10-front-three-quarter",
         approval: "NOT APPROVED FOR FABRICATION OR ROAD USE",
       }, null, 2), "application/json");
@@ -80,9 +87,9 @@ export function FrontClipReviewPanel({ design }: { design: VehicleDesign }) {
     <section className="front-clip-review" aria-label="Front clip CAD and measured capture review">
       <div className="front-review-heading">
         <div>
-          <span>PARAMETRIC FRONT CLIP / M2 CONCEPT</span>
+          <span>PARAMETRIC FRONT CLIP / M3 BODY & UPGRADE CONCEPTS</span>
           <h2>G10 body · hood · fenders · grille · bumper</h2>
-          <p>Exact OCCT BREP surfaces, arch cuts and STEP export. Provisional dimensions until measured capture.</p>
+          <p>Contoured roof and cab, revised body proportions, axle-driven wheel arches, selectable bumper and front suspension CAD. Provisional dimensions until measured capture.</p>
         </div>
         <a href="/references/g10-1986">Styling targets ↗</a>
       </div>

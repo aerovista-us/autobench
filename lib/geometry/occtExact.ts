@@ -1,6 +1,7 @@
 import type { VehicleDesign } from "../model/types";
 import { buildFrontClipCad, type CadMaterial } from "./frontClipCad.ts";
 import { frontClipSpec } from "./frontClipSpec.ts";
+import { buildFrontSuspensionConcept } from "./upgradeConceptCad.ts";
 import {
   disposeSharedGeometryRuntime,
   getSharedGeometryRuntime,
@@ -39,8 +40,9 @@ export interface ExactVehicleMesh {
   positions: Float32Array;
   normals: Float32Array;
   indices: Uint32Array;
-  materialGroups: { material: CadMaterial; start: number; count: number }[];
+  materialGroups: { material: CadMaterial; start: number; count: number; inspectionVisible: boolean }[];
   triangleCount: number;
+  partNames: string[];
   metrics: ExactVehicleMetrics;
   step?: string;
   projectionSvg?: string;
@@ -179,18 +181,38 @@ async function compileInternal(
     tireRadius,
   );
 
-  const wheelRims = [
-    ...[-1, 1].flatMap(side => [
-      { name: `front-${side > 0 ? "left" : "right"}-rim`, material: "chrome" as CadMaterial,
-        shape: makeLateralCylinder(202, 22, frontAxleX,
-          side * (p.frontTrackMm / 2 + p.tireWidthMm / 2 - 12), tireRadius) },
-      { name: `rear-${side > 0 ? "left" : "right"}-rim`, material: "chrome" as CadMaterial,
-        shape: makeLateralCylinder(202, 22, rearAxleX,
-          side * (p.rearTrackMm / 2 + p.tireWidthMm / 2 - 12), tireRadius) },
-    ]),
-  ];
+  // Distinct raised metal wheel faces and lug details replace black disk wheels.
+  // Sizes are styling envelopes, not verified hub PCD, offset or wheel fitment.
+  const wheelRims: Array<{ name: string; material: CadMaterial; shape: ReturnType<typeof kernel.makeBox> }> = [];
+  for (const axle of [
+    { name: "front", x: frontAxleX, track: p.frontTrackMm },
+    { name: "rear", x: rearAxleX, track: p.rearTrackMm },
+  ]) {
+    for (const side of [-1, 1]) {
+      const prefix = `${axle.name}-${side > 0 ? "left" : "right"}`;
+      const faceY = side * (axle.track / 2 + p.tireWidthMm / 2 + 27);
+      wheelRims.push({ name: `${prefix}-silver-wheel-face`, material: "chrome",
+        shape: makeLateralCylinder(209, 19, axle.x, faceY, tireRadius) });
+      wheelRims.push({ name: `${prefix}-center-cap`, material: "steel",
+        shape: makeLateralCylinder(76, 25, axle.x, faceY + side * 13, tireRadius) });
+      const torus = kernel.makeTorus(218, 15);
+      const turned = kernel.rotate(torus, {
+        point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 },
+      }, -Math.PI / 2);
+      wheelRims.push({ name: `${prefix}-rim-bead-ring`, material: "chrome",
+        shape: kernel.translate(turned, axle.x, faceY, tireRadius) });
+      for (let lug = 0; lug < 6; lug++) {
+        const theta = lug * Math.PI / 3;
+        wheelRims.push({ name: `${prefix}-lug-${lug}`, material: "dark",
+          shape: makeLateralCylinder(14, 21,
+            axle.x + Math.cos(theta) * 123, faceY + side * 17,
+            tireRadius + Math.sin(theta) * 123) });
+      }
+    }
+  }
   const allParts = [
     ...bodyCad.parts,
+    ...buildFrontSuspensionConcept(kernel, design),
     ...wheelRims,
     { name: "left-frame-rail", material: "steel" as CadMaterial, shape: leftRail },
     { name: "right-frame-rail", material: "steel" as CadMaterial, shape: rightRail },
@@ -205,26 +227,38 @@ async function compileInternal(
 
   // Preserve material boundaries from distinct exact BREP parts. The STEP and
   // exact measurements use the same assembly, not the display tessellation.
-  const materials: CadMaterial[] = ["body", "chrome", "dark", "glass", "rubber", "steel", "light"];
+  const materials: CadMaterial[] = ["body", "chrome", "dark", "glass", "rubber", "steel", "light", "suspension"];
   const positionChunks: Float32Array[] = [];
   const normalChunks: Float32Array[] = [];
   const indexChunks: Uint32Array[] = [];
   const materialGroups: ExactVehicleMesh["materialGroups"] = [];
   let vertexOffset = 0;
   let indexOffset = 0;
+  // Inspection is based on *part identity*, not shared paint/material. This
+  // excludes trail/winch bumpers while retaining chrome rims and dark lug nuts.
+  const isChassisInspectionPart = (name: string) =>
+    /(?:^|-)frame-rail$/.test(name) ||
+    name === "front-axle" || name === "rear-axle" ||
+    /-(?:tire|silver-wheel-face|center-cap|rim-bead-ring)$/.test(name) ||
+    /-lug-\d+$/.test(name) ||
+    /(?:spring-leaf|spring-eye-envelope|shock-envelope|shock-upper-mount|reservoir-envelope)/.test(name);
   for (const material of materials) {
-    const shapes = allParts.filter(part => part.material === material).map(part => part.shape);
-    if (!shapes.length) continue;
-    const groupShape = kernel.makeCompound(shapes);
-    const mesh = kernel.tessellate(groupShape, { linearDeflection: 4, angularDeflection: 0.25 });
-    positionChunks.push(mesh.positions.slice());
-    normalChunks.push(mesh.normals.slice());
-    const shifted = new Uint32Array(mesh.indices.length);
-    for (let i = 0; i < shifted.length; i++) shifted[i] = mesh.indices[i] + vertexOffset;
-    indexChunks.push(shifted);
-    materialGroups.push({ material, start: indexOffset, count: shifted.length });
-    vertexOffset += mesh.positions.length / 3;
-    indexOffset += shifted.length;
+    for (const inspectionVisible of [false, true]) {
+      const shapes = allParts.filter(part =>
+        part.material === material && isChassisInspectionPart(part.name) === inspectionVisible,
+      ).map(part => part.shape);
+      if (!shapes.length) continue;
+      const groupShape = kernel.makeCompound(shapes);
+      const mesh = kernel.tessellate(groupShape, { linearDeflection: 4, angularDeflection: 0.25 });
+      positionChunks.push(mesh.positions.slice());
+      normalChunks.push(mesh.normals.slice());
+      const shifted = new Uint32Array(mesh.indices.length);
+      for (let i = 0; i < shifted.length; i++) shifted[i] = mesh.indices[i] + vertexOffset;
+      indexChunks.push(shifted);
+      materialGroups.push({ material, start: indexOffset, count: shifted.length, inspectionVisible });
+      vertexOffset += mesh.positions.length / 3;
+      indexOffset += shifted.length;
+    }
   }
   const positions = new Float32Array(vertexOffset * 3);
   const normals = new Float32Array(vertexOffset * 3);
@@ -242,8 +276,8 @@ async function compileInternal(
   // Every datum and cut is verified from OCCT BREP surfaces and volumes.
   const assemblyBounds = kernel.getBoundingBox(assembly);
   const frontDatumBounds = kernel.getBoundingBox(bodyCad.bodyDatum);
-  const rearDatumPart = bodyCad.parts.find(part => part.name === "cabin-roof");
-  if (!rearDatumPart) throw new Error("Missing body rear datum");
+  const rearDatumPart = bodyCad.parts.find(part => part.name === "rear-closure");
+  if (!rearDatumPart) throw new Error("Missing rear body closure datum");
   const rearDatumBounds = kernel.getBoundingBox(rearDatumPart.shape);
   const frontTireBounds = kernel.getBoundingBox(frontLeftTire);
   const rearTireBounds = kernel.getBoundingBox(rearLeftTire);
@@ -264,6 +298,7 @@ async function compileInternal(
     indices,
     materialGroups,
     triangleCount: indices.length / 3,
+    partNames: allParts.map(part => part.name),
     metrics: {
       frontAxleXmm: measuredFrontAxleX,
       rearAxleXmm: measuredRearAxleX,

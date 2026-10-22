@@ -200,7 +200,7 @@ function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
   );
 }
 
-function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
+function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMesh; inspectSuspension: boolean }) {
   const geometry = useMemo(() => {
     const result = new BufferGeometry();
     const positions = new Float32Array(exact.positions.length);
@@ -231,20 +231,22 @@ function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   const finishes = {
-    body: { color: "#316da4", roughness: 0.4, metalness: 0.16 },
+    body: { color: "#194773", roughness: 0.32, metalness: 0.24 },
     chrome: { color: "#e0e8f0", roughness: 0.3, metalness: 0.65 },
     dark: { color: "#313b47", roughness: 0.75, metalness: 0.08 },
     glass: { color: "#183b53", roughness: 0.18, metalness: 0.12 },
     rubber: { color: "#2d3138", roughness: 0.96, metalness: 0.01 },
     steel: { color: "#647381", roughness: 0.6, metalness: 0.7 },
     light: { color: "#f3e9cf", roughness: 0.23, metalness: 0.15 },
+    suspension: { color: "#e6a143", roughness: 0.42, metalness: 0.35 },
   } as const;
 
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
       {exact.materialGroups.map((group, index) => (
-        <meshStandardMaterial key={group.material} attach={`material-${index}`}
-          {...finishes[group.material]} />
+        <meshStandardMaterial key={`${group.material}-${index}`} attach={`material-${index}`}
+          {...finishes[group.material]}
+          visible={!inspectSuspension || group.inspectionVisible} />
       ))}
     </mesh>
   );
@@ -283,7 +285,9 @@ function DesignGuides({ design }: { design: VehicleDesign }) {
   );
 }
 
-export function VehicleViewport({ design }: { design: VehicleDesign }) {
+export function VehicleViewport({ design, inspectSuspension = false }: {
+  design: VehicleDesign; inspectSuspension?: boolean;
+}) {
   const [compact, setCompact] = useState(false);
   const [exact, setExact] = useState<ExactVehicleMesh | null>(null);
   const [exactState, setExactState] = useState<
@@ -323,28 +327,28 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
   const exactForRevision = exact?.revision === design.revision ? exact : null;
 
   return (
-    <div className="viewport-shell">
+    <div className="viewport-shell" data-inspection-mode={inspectSuspension ? "chassis" : "full"}>
       <Canvas
         key={compact ? "front-clip-mobile" : "full-vehicle-desktop"}
         shadows
-        camera={{ position: compact ? [8.3, 4.6, 9.0] : [5.7, 3.8, 6.2],
+        camera={{ position: compact ? [9.5, 4.1, 10.5] : [7.1, 3.3, 8.1],
           fov: 39, near: 0.1, far: 100 }}
         dpr={[1, 1.6]}
       >
         <color attach="background" args={["#071019"]} />
         <fog attach="fog" args={["#071019", 11, 23]} />
-        <ambientLight intensity={1.0} />
+        <ambientLight intensity={0.8} />
         <directionalLight
           position={[4, 9, 6]}
-          intensity={3.2}
+          intensity={2.1}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
-        <directionalLight position={[-5, 4, -5]} intensity={1.4} />
+        <directionalLight position={[-5, 4, -5]} intensity={0.9} />
         <Suspense fallback={null}>
           {exactForRevision ? (
-            <ExactVehicleModel exact={exactForRevision} />
+            <ExactVehicleModel exact={exactForRevision} inspectSuspension={inspectSuspension} />
           ) : (
             <AnalyticalVehicleModel design={design} />
           )}
@@ -370,7 +374,8 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
           dampingFactor={0.08}
         />
       </Canvas>
-      <div className="viewport-badge">
+      <div className="viewport-badge" data-testid="exact-status"
+        data-revision={exactForRevision?.revision ?? ""}>
         {exactState === "ready" && exactForRevision
           ? `EXACT OCCT · ${exactForRevision.triangleCount.toLocaleString()} TRI · PROVISIONAL DIMENSIONS`
           : exactState === "error"

@@ -45,6 +45,9 @@ jobs:
       - name: Exact G10 front-clip CAD across five axle scenarios
         run: node scripts/m2-front-clip-exact.mjs
 
+      - name: M3 body and aftermarket-style CAD package validation
+        run: node scripts/m3-upgrade-cad-smoke.mjs
+
       - name: Replicad full Pops bake-off
         run: node scripts/m0-replicad-pops.mjs
 
@@ -100,6 +103,7 @@ jobs:
           node scripts/m1-photo-browser-smoke.mjs
           node scripts/m1-visual-reference-browser-smoke.mjs
           node scripts/m2-front-clip-browser-smoke.mjs
+          node scripts/m3-upgrades-browser-smoke.mjs
 
       - name: Upload M1 photo calibration browser proof
         uses: actions/upload-artifact@v4
@@ -115,4 +119,15 @@ jobs:
           path: |
             artifacts/m2-g10-front-clip.png
             artifacts/m2-g10-front-clip-mobile.png
+          if-no-files-found: error
+
+      - name: Upload M3 aftermarket concepts browser proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-body-bumper-suspension-browser
+          path: |
+            artifacts/m3-steel-bumper-contoured-body.png
+            artifacts/m3-winch-reservoir-leaf-inspection.png
+            artifacts/m3-brush-guard-body-size.png
+            artifacts/m3-mobile-upgrades.png
           if-no-files-found: error

@@ -1,8 +1,10 @@
 import type { OcctKernel } from "occt-wasm";
 import type { VehicleDesign } from "../model/types";
 import { frontClipSpec } from "./frontClipSpec.ts";
+import { buildRefinedCabin } from "./bodyContourCad.ts";
+import { buildBumperConcept } from "./upgradeConceptCad.ts";
 
-export type CadMaterial = "body" | "chrome" | "dark" | "glass" | "rubber" | "steel" | "light";
+export type CadMaterial = "body" | "chrome" | "dark" | "glass" | "rubber" | "steel" | "light" | "suspension";
 type Kernel = Awaited<ReturnType<typeof OcctKernel.init>>;
 type Handle = ReturnType<Kernel["makeBox"]>;
 
@@ -54,45 +56,7 @@ export function buildFrontClipCad(kernel: Kernel, design: VehicleDesign): FrontC
   );
   const cutArch = (shape: Handle) => kernel.cutAll(shape, [frontArchCutter, rearArchCutter]);
 
-  // The cabin is a shell of exact panels, not a solid box that would hide the
-  // wheel cutouts. It retains the fixed body front/rear datum for all offsets.
-  const sideThickness = 58;
-  for (const side of [-1, 1]) {
-    const y1 = side > 0 ? halfW - sideThickness : -halfW;
-    const y2 = side > 0 ? halfW : -halfW + sideThickness;
-    add(side > 0 ? "cabin-left-body-panel" : "cabin-right-body-panel", "body",
-      cutArch(box(s.bodyRearXmm, y1, p.groundClearanceMm,
-        s.cabinFrontXmm, y2, roofZ - 75)));
-
-    // Side glass overlays, explicitly concept-only; actual openings are not
-    // measured, and are not being fabricated from this CAD.
-    const glassOuterY = side > 0 ? halfW + 2 : -halfW - 18;
-    add(side > 0 ? "driver-window" : "passenger-window", "glass",
-      box(s.cabinFrontXmm - 1000, glassOuterY, roofZ - 740,
-        s.cabinFrontXmm - 95, glassOuterY + 16, roofZ - 175));
-
-    // Beltline from the reference G10: uninterrupted long side character line.
-    const trimY1 = side > 0 ? halfW + 4 : -halfW - 14;
-    add(side > 0 ? "left-body-beltline" : "right-body-beltline", "chrome",
-      box(s.bodyRearXmm + 95, trimY1, p.groundClearanceMm + 1225,
-        s.cabinFrontXmm - 25, trimY1 + 10, p.groundClearanceMm + 1241));
-    // Dark lower-body paint treatment: an exact separate BREP skin, preserving
-    // the proposed blue-to-black heritage look without implying paint approval.
-    add(side > 0 ? "left-dark-rocker" : "right-dark-rocker", "dark",
-      cutArch(box(s.bodyRearXmm + 55, trimY1, p.groundClearanceMm + 95,
-        s.cabinFrontXmm, trimY1 + 14, p.groundClearanceMm + 340)));
-  }
-
-  add("cabin-roof", "body", box(s.bodyRearXmm, -halfW, roofZ - 75,
-    s.cabinFrontXmm, halfW, roofZ));
-  add("cabin-floor", "steel", cutArch(box(s.bodyRearXmm + 40, -halfW + 55,
-    p.groundClearanceMm + 570, s.cabinFrontXmm, halfW - 55,
-    p.groundClearanceMm + 635)));
-  add("rear-body-closure", "body", box(s.bodyRearXmm, -halfW + 58,
-    p.groundClearanceMm + 635, s.bodyRearXmm + 58, halfW - 58, roofZ - 75));
-
-  add("windshield", "glass", box(s.cabinFrontXmm - 24, -halfW + 100,
-    roofZ - 740, s.cabinFrontXmm + 5, halfW - 100, roofZ - 155));
+  parts.push(...buildRefinedCabin(kernel, design, frontArchCutter, rearArchCutter));
 
   // Both fender shells are cut by the axle-driven exact cylindrical arch.
   // The axle moves; the main body front/rear datums do not.
@@ -176,12 +140,7 @@ export function buildFrontClipCad(kernel: Kernel, design: VehicleDesign): FrontC
     }
   }
 
-  // Bumper is a separate, straight chrome BREP member. This is styling only;
-  // winch, impact, attachment, approach and recovery load paths are unverified.
-  add("straight-front-bumper", "chrome",
-    box(nose + 65, -(p.bodyWidthMm + 90) / 2,
-      p.groundClearanceMm + 75, s.bumperFrontXmm,
-      (p.bodyWidthMm + 90) / 2, p.groundClearanceMm + 240));
+  parts.push(...buildBumperConcept(kernel, design));
   const bodyDatum = add("front-body-datum", "body",
     box(nose - 12, -halfW + 80, p.groundClearanceMm + 1270,
       nose, halfW - 80, p.groundClearanceMm + 1290));
