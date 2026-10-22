@@ -317,7 +317,7 @@ async function compileInternal(
         rightSidePanelVolumeMm3: kernel.getVolume(rightPanel.shape),
         rearClosureVolumeMm3: kernel.getVolume(rearDatumPart.shape),
         accessoryPartCount: bodyCad.parts.filter(part =>
-          /^(?:roof-rack|left-roof-rack|right-roof-rack|left-rack-foot|right-rack-foot|left-entry-step|right-entry-step|rear-door-spare|front-left-aux|front-right-aux)/.test(part.name)).length,
+          /^(?:roof-rack-crossbar-|(?:left|right)-(?:roof-rack-rail|rack-foot-|entry-step|step-bracket-)|rear-(?:door-spare-tire-envelope|spare-carrier-mount-envelope)|front-(?:left|right)-aux-lamp-)/.test(part.name)).length,
       },
       frontAxleXmm: measuredFrontAxleX,
       rearAxleXmm: measuredRearAxleX,

@@ -59,6 +59,11 @@ try {
       exact.metrics.bodyIdentity.rightSidePanelVolumeMm3 <= 0) {
       throw new Error(`${name}: empty BREP side panels`);
     }
+    const expectedAccessoryCount = { cargo: 0, classic: 6, camper: 25, expedition: 27 };
+    if (exact.metrics.bodyIdentity.accessoryPartCount !== expectedAccessoryCount[name]) {
+      throw new Error(`${name}: accessory count is incomplete: ` +
+        `${exact.metrics.bodyIdentity.accessoryPartCount} != ${expectedAccessoryCount[name]}`);
+    }
     if (name === "expedition") {
       if (!exact.step?.includes("ISO-10303-21")) throw new Error("Expedition STEP export failed");
       await writeFile("artifacts/pops-m4-expedition-CONCEPT.step", exact.step);
