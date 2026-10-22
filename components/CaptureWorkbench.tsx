@@ -4,18 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CAPTURE_STORAGE_KEY, captureFields, captureReadiness, fromMillimeters,
   makeCaptureDraft, parseCaptureDraft, toMillimeters, updateCaptureMeasurement,
-  type CaptureDraft, type CaptureField, type CaptureMeasurement, type PhotoView,
+  type CaptureDraft, type CaptureField, type CaptureMeasurement,
 } from "@/lib/model/capture";
 import type { Confidence, Provenance } from "@/lib/model/types";
-
-const views: { value: PhotoView; label: string }[] = [
-  { value: "driver-side", label: "Driver side" },
-  { value: "passenger-side", label: "Passenger side" },
-  { value: "front", label: "Front" },
-  { value: "rear", label: "Rear" },
-  { value: "front-three-quarter", label: "Front three-quarter" },
-  { value: "underbody", label: "Underbody / chassis" },
-];
+import { PhotoCalibrationBoard } from "./PhotoCalibrationBoard";
 
 function downloadJson(draft: CaptureDraft) {
   const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" });
@@ -31,22 +23,30 @@ export function CaptureWorkbench() {
   const [draft, setDraft] = useState<CaptureDraft>(makeCaptureDraft);
   const [unit, setUnit] = useState<"in" | "mm">("in");
   const [selected, setSelected] = useState<CaptureField>("baselineWheelbaseMm");
-  const [photoView, setPhotoView] = useState<PhotoView>("driver-side");
-  const [photoReference, setPhotoReference] = useState("");
-  const [photoNotes, setPhotoNotes] = useState("");
   const [message, setMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [storageSafe, setStorageSafe] = useState(true);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CAPTURE_STORAGE_KEY);
       if (stored) setDraft(parseCaptureDraft(stored));
     } catch {
-      setMessage("Stored capture could not be loaded. Export your draft before clearing browser data.");
+      setStorageSafe(false);
+      setMessage("Stored capture could not be loaded. Local autosave paused to avoid overwriting it.");
     } finally {
       setHydrated(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || !storageSafe) return;
+    try {
+      localStorage.setItem(CAPTURE_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      setMessage("Autosave failed. Export capture JSON and keep the original photos.");
+    }
+  }, [draft, hydrated, storageSafe]);
 
   const status = useMemo(() => captureReadiness(draft), [draft]);
   const measurement = draft.measurements.find(m => m.id === selected)!;
@@ -78,28 +78,10 @@ export function CaptureWorkbench() {
     try {
       const next = parseCaptureDraft(await file.text());
       setDraft(next);
-      setMessage("Capture imported. Review measurements before applying any design changes.");
+      setMessage("Capture imported. Reattach original photo files if this browser lacks the local images.");
     } catch (error) {
       setMessage(`Import rejected: ${String(error)}`);
     }
-  }
-
-  function addPhoto() {
-    const reference = photoReference.trim();
-    if (!reference) {
-      setMessage("Enter a photo filename or reference before adding.");
-      return;
-    }
-    setDraft(current => ({
-      ...current,
-      updatedAt: new Date().toISOString(),
-      photos: [...current.photos, {
-        id: crypto.randomUUID(), view: photoView, reference, notes: photoNotes.trim(),
-      }],
-    }));
-    setPhotoReference("");
-    setPhotoNotes("");
-    setMessage("Photo reference added. The image bytes are not uploaded or stored.");
   }
 
   return (
@@ -127,7 +109,7 @@ export function CaptureWorkbench() {
         <div><span>REQUIRED MEASUREMENTS PENDING</span><strong>{status.missingMeasurements.length}</strong></div>
         <div><span>REQUIRED PHOTO VIEWS PENDING</span><strong>{status.missingViews.length}</strong></div>
         <div className={status.ready ? "capture-ready" : "capture-not-ready"}>
-          <span>CALIBRATION EVIDENCE</span><strong>{status.ready ? "READY FOR REVIEW" : "INCOMPLETE"}</strong>
+          <span>CAPTURE EVIDENCE</span><strong>{status.ready ? "READY FOR REVIEW" : "INCOMPLETE"}</strong>
         </div>
       </section>
 
@@ -247,37 +229,29 @@ export function CaptureWorkbench() {
             )}
           </div>
 
-          <div className="capture-section-label capture-spaced">PHOTO REFERENCE BOARD</div>
-          <p className="capture-help">Record filenames or secure references. Actual image upload, alignment, and calibration will follow in M1.</p>
-          <label>View
-            <select value={photoView} onChange={event => setPhotoView(event.target.value as PhotoView)}>
-              {views.map(view => <option key={view.value} value={view.value}>{view.label}</option>)}
-            </select>
-          </label>
-          <label>Filename / reference
-            <input value={photoReference} placeholder="IMG_0001.jpg"
-              onChange={event => setPhotoReference(event.target.value)} />
-          </label>
-          <label>Notes
-            <input value={photoNotes} placeholder="Known-length marker visible"
-              onChange={event => setPhotoNotes(event.target.value)} />
-          </label>
-          <button className="capture-add-photo" onClick={addPhoto}>Add photo reference</button>
-          <div className="capture-photo-list">
-            {draft.photos.length === 0 && <p className="capture-help">No photo references yet.</p>}
-            {draft.photos.map(photo => (
-              <div key={photo.id}>
-                <strong>{views.find(v => v.value === photo.view)?.label}</strong>
-                <span>{photo.reference}</span>
-                {photo.notes && <small>{photo.notes}</small>}
-                <button aria-label={`Remove ${photo.reference}`} onClick={() => setDraft(current => ({
-                  ...current, photos: current.photos.filter(p => p.id !== photo.id),
-                }))}>Remove</button>
-              </div>
-            ))}
-          </div>
+
         </aside>
       </div>
+      <section className="capture-photo-workspace">
+          <PhotoCalibrationBoard
+            photos={draft.photos}
+            wheelbaseMm={draft.measurements.find(m => m.id === "baselineWheelbaseMm")?.valueMm ?? 0}
+            wheelbaseMeasured={draft.measurements.some(m => m.id === "baselineWheelbaseMm" &&
+              ["observed", "scanDerived"].includes(m.provenance) && ["high", "verified"].includes(m.confidence))}
+            onCreatePhoto={photo => setDraft(current => ({
+              ...current, updatedAt: new Date().toISOString(),
+              photos: [...current.photos, photo],
+            }))}
+            onUpdatePhoto={photo => setDraft(current => ({
+              ...current, updatedAt: new Date().toISOString(),
+              photos: current.photos.map(p => p.id === photo.id ? photo : p),
+            }))}
+            onRemovePhoto={id => setDraft(current => ({
+              ...current, updatedAt: new Date().toISOString(),
+              photos: current.photos.filter(p => p.id !== id),
+            }))}
+          />
+      </section>
       <footer className="capture-footer">M1 CAPTURE · LOCAL DRAFT ONLY · MM SOURCE OF TRUTH · NO STRUCTURAL OR FABRICATION APPROVAL</footer>
     </main>
   );

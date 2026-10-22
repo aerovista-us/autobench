@@ -39,6 +39,24 @@ The first proving ground is the family-built Chevy G-series 4x4 van. Initial des
 
 Capture -> Calibrate -> Model -> Modify -> Validate -> Compare -> Render -> Draw -> Export -> Build
 
-## Status
+## Status (October 2026)
 
-Repository initialized. Architecture, open-source evaluation, Pops Van capture specification, and v0 roadmap are on the planning branch in PR #1.
+- **M0 merged:** one authoritative OCCT runtime with brepjs authoring; exact baseline/+10-inch geometry, STEP, projection, and browser smoke tests.
+- **M1 capture register merged:** `/capture` has measured/assumed provenance, confidence, tolerance, source, lock, local JSON and draft persistence.
+- **M1 photo calibration in progress:** browser-local PNG/JPEG/WebP import, named photo datums, 2-point image-plane scale and wheel-center cross-check. This does **not** solve camera pose, perspective correction, 3D fitting or structural approval.
+- **Security isolation:** OpenGeometry research code is not served by the production Next.js app; its vulnerable transitive `uuid` is excluded from production dependencies. The historical browser research fixture is archived under `research/`.
+
+### Run locally
+
+```bash
+npm ci
+npm test
+npm run build
+npm start
+```
+
+Open `/` for the 3D model or `/capture` for measurement and photo evidence.
+
+**Photo privacy and backups:** image bytes are stored in the current browser's IndexedDB only. Capture JSON includes filenames, measurements, marker positions and scales, **not the image bytes**. Keep your original photos separately; reattach them after importing JSON on another browser. No cloud upload or automatic apply-to-model is implemented.
+
+**Build safety:** This is an exploratory design and evidence workbench, not a structural, steering, suspension, brake, roadworthiness or fabrication certification.

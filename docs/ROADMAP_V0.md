@@ -25,13 +25,16 @@
 
 ## M1 — Pops Van baseline
 
-- [ ] capture/import UI
-- [ ] manual measurement entry
-- [ ] reference photo board
-- [ ] wheel/axle/frame/body-envelope primitives
-- [ ] datum/anchor editor
-- [ ] confidence/provenance system
-- [ ] baseline acceptance report
+- [x] capture/import UI (browser-local draft + JSON)
+- [x] manual measurement entry
+- [x] reference photo board and local image import
+- [x] wheel/axle/frame/body-envelope primitives (provisional M0 exact geometry)
+- [x] photo-space datum marker editor and two-point scale
+- [ ] full camera-pose and perspective calibration, photo-to-3D model registration
+- [ ] reviewed measured-value apply-to-model with conflict checks
+- [x] confidence/provenance system
+- [x] fail-closed capture-evidence readiness summary
+- [ ] calibrated model acceptance report with independent geometry checks
 
 **Exit:** AutoBench contains a believable calibrated as-captured van envelope.
 
