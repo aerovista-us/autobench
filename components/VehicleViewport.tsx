@@ -200,7 +200,7 @@ function AnalyticalVehicleModel({ design }: { design: VehicleDesign }) {
   );
 }
 
-function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
+function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMesh; inspectSuspension: boolean }) {
   const geometry = useMemo(() => {
     const result = new BufferGeometry();
     const positions = new Float32Array(exact.positions.length);
@@ -238,13 +238,15 @@ function ExactVehicleModel({ exact }: { exact: ExactVehicleMesh }) {
     rubber: { color: "#2d3138", roughness: 0.96, metalness: 0.01 },
     steel: { color: "#647381", roughness: 0.6, metalness: 0.7 },
     light: { color: "#f3e9cf", roughness: 0.23, metalness: 0.15 },
+    suspension: { color: "#e6a143", roughness: 0.42, metalness: 0.35 },
   } as const;
 
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
       {exact.materialGroups.map((group, index) => (
         <meshStandardMaterial key={group.material} attach={`material-${index}`}
-          {...finishes[group.material]} />
+          {...finishes[group.material]}
+          visible={!inspectSuspension || ["steel", "suspension", "rubber"].includes(group.material)} />
       ))}
     </mesh>
   );
@@ -283,7 +285,9 @@ function DesignGuides({ design }: { design: VehicleDesign }) {
   );
 }
 
-export function VehicleViewport({ design }: { design: VehicleDesign }) {
+export function VehicleViewport({ design, inspectSuspension = false }: {
+  design: VehicleDesign; inspectSuspension?: boolean;
+}) {
   const [compact, setCompact] = useState(false);
   const [exact, setExact] = useState<ExactVehicleMesh | null>(null);
   const [exactState, setExactState] = useState<
@@ -344,7 +348,7 @@ export function VehicleViewport({ design }: { design: VehicleDesign }) {
         <directionalLight position={[-5, 4, -5]} intensity={1.4} />
         <Suspense fallback={null}>
           {exactForRevision ? (
-            <ExactVehicleModel exact={exactForRevision} />
+            <ExactVehicleModel exact={exactForRevision} inspectSuspension={inspectSuspension} />
           ) : (
             <AnalyticalVehicleModel design={design} />
           )}

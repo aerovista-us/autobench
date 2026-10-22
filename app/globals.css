@@ -824,3 +824,15 @@ input[type="range"] {
  .front-review-actions { align-items:stretch; flex-direction:column; }
  .front-review-actions a { white-space:normal; }
 }
+
+/* M3 G-series proportions and upgrade concept selector */
+.body-proportion-control { border-bottom:1px solid var(--line); padding-bottom:10px; }
+.concept-options { display:grid; gap:12px; padding:12px 0; }
+.concept-options > label:not(.concept-visibility) { display:grid; gap:6px; font-size:11px; color:var(--muted); }
+.concept-options select { display:block; width:100%; min-width:0; border:1px solid var(--line-strong);
+ background:#102635; color:#e3edf5; padding:10px; border-radius:6px; font:inherit; font-size:12px; }
+.concept-options select:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+.concept-visibility { display:flex; align-items:center; gap:8px; color:#b7c9d8; font-size:11px; cursor:pointer; line-height:1.4; }
+.concept-visibility input { accent-color:#f1b34b; width:17px; height:17px; }
+.concept-safety { border-color:#604e32; }
+.concept-safety p { font-size:11px; line-height:1.5; }

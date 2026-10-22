@@ -6,6 +6,8 @@ import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
 import { INCH, popsVanBaseline } from "@/lib/model/popsVan";
 import { setVehicleParameter } from "@/lib/model/operations";
+import { resolveConceptOptions, setVehicleConceptOption, conceptCautions } from "@/lib/model/conceptOptions";
+import type { VehicleConceptOptions } from "@/lib/model/conceptOptions";
 import { createSideProjectionSvg } from "@/lib/export/sideProjection";
 import { kernelScorecard } from "@/lib/geometry/kernelRegistry";
 import type { VehicleDesign } from "@/lib/model/types";
@@ -24,6 +26,11 @@ function downloadText(filename: string, contents: string, mime: string) {
 
 export function AutoBench() {
   const [design, setDesign] = useState<VehicleDesign>(popsVanBaseline);
+  const [inspectSuspension, setInspectSuspension] = useState(false);
+  const concepts = resolveConceptOptions(design);
+  function setConcept<K extends keyof VehicleConceptOptions>(key: K, value: VehicleConceptOptions[K]) {
+    setDesign(current => setVehicleConceptOption(current, key, value));
+  }
   const metrics = useMemo(() => deriveVehicle(design), [design]);
   const offsetIn = Number(metrics.frontAxleOffsetIn.toFixed(1));
   const clearanceState =
@@ -107,7 +114,11 @@ export function AutoBench() {
             <div className="tree-child">▾ Body</div>
             <div className="tree-leaf">◇ Main envelope</div>
             <div className="tree-leaf">◇ Front clip</div>
-            <div className="tree-leaf">◇ Bumper</div>
+            <div className="tree-leaf">◇ Bumper · {concepts.bumper}</div>
+            <div className="tree-leaf">◇ Contoured roof / raked cab</div>
+            <div className="tree-child">▾ Front suspension concepts</div>
+            <div className="tree-leaf">◇ Shocks · {concepts.shock}</div>
+            <div className="tree-leaf">◇ Springs · {concepts.spring}</div>
           </nav>
 
           <div className="panel-heading spaced">
@@ -144,7 +155,7 @@ export function AutoBench() {
         </aside>
 
         <section className="viewport-column">
-          <VehicleViewport design={design} />
+          <VehicleViewport design={design} inspectSuspension={inspectSuspension} />
 
           <div className="metric-strip">
             <Metric
@@ -201,6 +212,80 @@ export function AutoBench() {
               <span>0</span>
               <span>14 in</span>
             </div>
+          </div>
+
+          <div className="panel-heading spaced">
+            <span>BODY / CONCEPT PROPORTIONS</span>
+            <small>reference-informed · not measured</small>
+          </div>
+          {([
+            ["bodyWidthMm", "Body width", 74, 86],
+            ["bodyHeightMm", "Body height", 74, 90],
+            ["rearOverhangMm", "Rear overhang", 42, 64],
+          ] as const).map(([field, label, min, max]) => (
+            <div className="control-block body-proportion-control" key={field}>
+              <div className="control-label">
+                <span>{label}</span>
+                <strong>{(design.parameters[field] / INCH).toFixed(1)} in</strong>
+              </div>
+              <input type="range" min={min} max={max} step={0.5}
+                aria-label={label} value={design.parameters[field] / INCH}
+                onChange={event => setDesign(current =>
+                  setVehicleParameter(current, field, Number(event.target.value) * INCH,
+                    `Provisional G-series body proportion: ${label}`))} />
+              <div className="range-ends"><span>{min} in</span><span>{max} in</span></div>
+            </div>
+          ))}
+          <div className="panel-heading spaced">
+            <span>FRONT-END CONCEPTS</span>
+            <small>no fitment approval</small>
+          </div>
+          <div className="concept-options">
+            <label>
+              <span>Front bumper</span>
+              <select aria-label="Front bumper concept" value={concepts.bumper}
+                onChange={event => setConcept("bumper",
+                  event.target.value as VehicleConceptOptions["bumper"])}>
+                <option value="chrome-stock">G-series chrome profile</option>
+                <option value="plate-trail">Aftermarket-style steel trail</option>
+                <option value="winch-plate">Winch plate envelope · unverified</option>
+                <option value="brush-guard">Chrome + brush guard</option>
+              </select>
+            </label>
+            <label>
+              <span>Front shocks</span>
+              <select aria-label="Front shock concept" value={concepts.shock}
+                onChange={event => setConcept("shock",
+                  event.target.value as VehicleConceptOptions["shock"])}>
+                <option value="unverified">Not yet identified</option>
+                <option value="monotube">Heavy-duty monotube concept</option>
+                <option value="remote-reservoir">Remote-reservoir concept</option>
+              </select>
+            </label>
+            <label>
+              <span>Front springs</span>
+              <select aria-label="Front spring concept" value={concepts.spring}
+                onChange={event => setConcept("spring",
+                  event.target.value as VehicleConceptOptions["spring"])}>
+                <option value="unverified">Not yet identified</option>
+                <option value="leaf-service">Leaf-spring service concept</option>
+                <option value="heavy-duty-leaf">Heavy-duty leaf-pack concept</option>
+              </select>
+            </label>
+            <label className="concept-visibility">
+              <input type="checkbox" checked={inspectSuspension}
+                onChange={event => setInspectSuspension(event.target.checked)} />
+              <span>Isolate chassis and suspension CAD</span>
+            </label>
+          </div>
+          <div className="validation-card concept-safety">
+            <div className="validation-title">
+              <span className="pill fail">UNVERIFIED</span>
+              Parts and mount compatibility
+            </div>
+            <p>{conceptCautions[0]}</p>
+            <p>These are selectable CAD packages, not identified commercial SKUs or approved conversions.
+              No suspension travel, frame loads or bracket attachment verified.</p>
           </div>
 
           <div className="validation-card">

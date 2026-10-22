@@ -57,6 +57,14 @@ export interface VehicleVisualReferenceLink {
 }
 
 export interface VehicleDesign {
+  /** Provisional aftermarket styling/suspension choices, never verified fitment. */
+  conceptOptions?: import("./conceptOptions").VehicleConceptOptions;
+  conceptHistory?: Array<{
+    revision: number;
+    key: keyof import("./conceptOptions").VehicleConceptOptions;
+    value: string;
+    note: string;
+  }>;
   id: string;
   name: string;
   revision: number;
