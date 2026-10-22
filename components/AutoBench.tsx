@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { VehicleViewport } from "./VehicleViewport";
+import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
 import { INCH, popsVanBaseline } from "@/lib/model/popsVan";
 import { setVehicleParameter } from "@/lib/model/operations";
@@ -128,7 +129,7 @@ export function AutoBench() {
                 }
               >
                 <span>{value === 0 ? "Baseline" : `Axle +${value}\"`}</span>
-                <small>{value === 0 ? "as captured" : "candidate"}</small>
+                <small>{value === 0 ? "assumed" : "candidate"}</small>
               </button>
             ))}
           </div>
@@ -163,16 +164,17 @@ export function AutoBench() {
               detail={`${formatInches(metrics.approachRunMm)} in run`}
             />
             <Metric
-              label="Wheel opening"
+              label="Original arch envelope"
               value={
                 metrics.wheelOpeningClearanceMm >= 0
                   ? `+${formatInches(metrics.wheelOpeningClearanceMm)} in`
                   : `${formatInches(metrics.wheelOpeningClearanceMm)} in`
               }
-              detail={clearanceState === "pass" ? "clear" : "INTERFERENCE"}
+              detail={clearanceState === "pass" ? "legacy body reference" : "legacy interference"}
               danger={clearanceState === "conflict"}
             />
           </div>
+          <FrontClipReviewPanel design={design} />
         </section>
 
         <aside className="panel inspector">
@@ -206,7 +208,7 @@ export function AutoBench() {
               <span className={clearanceState === "pass" ? "pill pass" : "pill fail"}>
                 {clearanceState === "pass" ? "PASS" : "CONFLICT"}
               </span>
-              Tire / body opening
+              Original body opening
             </div>
             <p>
               Remaining longitudinal envelope:{" "}
@@ -214,8 +216,9 @@ export function AutoBench() {
             </p>
             {clearanceState === "conflict" && (
               <p className="danger-text">
-                AutoBench is preserving the captured body envelope instead of
-                silently moving it. The wheel opening needs a design operation.
+                The original fixed opening conflicts with this axle position.
+                The new CAD fender arch follows the axle; its static margin and measured
+                fitment review appear below the 3D viewport.
               </p>
             )}
           </div>
