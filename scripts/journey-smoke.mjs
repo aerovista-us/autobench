@@ -7,8 +7,9 @@ try {
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(base, { waitUntil: "domcontentloaded" });
-  await page.getByRole("slider", { name: "Front axle offset" }).fill("8");
   await page.getByText("LOCAL DRAFT").waitFor();
+  await page.getByRole("slider", { name: "Front axle offset" }).fill("8");
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem("autobench:pops-van:design:v1") || "{}").parameters?.frontAxleOffsetMm === 203.2);
   await page.goto(base + "/model");
   const model = page.getByRole("region", { name: "Saved vehicle design" });
   await model.getByText("Front axle offset:").waitFor();
