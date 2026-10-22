@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSavedVehicleDesign } from "@/lib/model/savedDesign";
 import { VehicleViewport } from "./VehicleViewport";
 import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
@@ -26,7 +27,7 @@ function downloadText(filename: string, contents: string, mime: string) {
 }
 
 export function AutoBench() {
-  const [design, setDesign] = useState<VehicleDesign>(popsVanBaseline);
+  const { design, setDesign, hydrated } = useSavedVehicleDesign();
   const [inspectSuspension, setInspectSuspension] = useState(false);
   const concepts = resolveConceptOptions(design);
   const exteriorPreset = currentExteriorPreset(design);
@@ -78,6 +79,7 @@ export function AutoBench() {
         <div className="topbar-meta">
           <span className="status-dot" />
           <span>REV {design.revision}</span>
+          <span>{hydrated ? "LOCAL DRAFT" : "LOADING DRAFT"}</span>
           <span>MM SOT</span>
           <button onClick={exportManifest}>Export manifest</button>
         </div>
