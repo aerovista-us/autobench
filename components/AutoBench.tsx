@@ -87,7 +87,7 @@ export function AutoBench() {
         {["CAPTURE", "MODEL", "MODIFY", "VALIDATE", "PLAN", "RENDER"].map(
           (mode) => (
             <button key={mode} className={mode === "MODIFY" ? "active" : ""}
-              onClick={() => window.location.assign(mode === "CAPTURE" ? "/capture" : mode === "MODEL" ? "/" : "/" + mode.toLowerCase())}
+              onClick={() => window.location.assign(mode === "CAPTURE" ? "/capture" : mode === "MODIFY" ? "/" : "/" + mode.toLowerCase())}
               title={mode === "MODEL" ? "Return to the live vehicle model" : "Open " + mode.toLowerCase() + " stage"}>
               {mode}
             </button>
