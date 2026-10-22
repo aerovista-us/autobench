@@ -14,7 +14,7 @@
     "@react-three/drei": "10.7.9",
     "@react-three/fiber": "9.8.1",
     "brepjs": "20.0.0",
-    "next": "16.3.8",
+    "next": "^16.4.2",
     "occt-wasm": "5.5.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
