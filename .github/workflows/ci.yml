@@ -95,6 +95,7 @@ jobs:
           node scripts/m1-research-isolation-smoke.mjs
           node scripts/m1-capture-browser-smoke.mjs
           node scripts/m1-photo-browser-smoke.mjs
+          node scripts/m1-visual-reference-browser-smoke.mjs
 
       - name: Upload M1 photo calibration browser proof
         uses: actions/upload-artifact@v4

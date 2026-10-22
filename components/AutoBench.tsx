@@ -95,6 +95,9 @@ export function AutoBench() {
           <nav className="tree">
             <div className="tree-root">▾ Pops&apos; Chevy 4x4</div>
             <div className="tree-child">▾ Reference</div>
+            <a className="tree-leaf reference-tree-link" href={`/references/g10-1986?offset=${Math.round(offsetIn)}`}>
+              ◇ 1986 G10 front-end photo
+            </a>
             <div className="tree-leaf warning">○ Measurements — assumed</div>
             <div className="tree-child">▾ Chassis</div>
             <div className="tree-leaf">◇ Frame rails</div>
@@ -129,6 +132,14 @@ export function AutoBench() {
               </button>
             ))}
           </div>
+
+          <a className="workbench-reference-card" href={`/references/g10-1986?offset=${Math.round(offsetIn)}`}>
+            <img src="/references/1986-chevrolet-g10-gr-auto-gallery.jpg"
+              width="790" height="527" alt="1986 G10 reference, dark blue front three-quarter view" />
+            <strong>1986 G10 · visual reference 01</strong>
+            <span>Grille · stacked lamps · hood · bumper · wheel arch</span>
+            <small>View front-end guide →</small>
+          </a>
         </aside>
 
         <section className="viewport-column">

@@ -46,6 +46,16 @@ export interface DesignOperation {
   timestamp: string;
 }
 
+export interface VehicleVisualReferenceLink {
+  referenceId: string;
+  role: "styling-only";
+  targetAssembly: "front-clip";
+  imagePath: string;
+  guidePath: string;
+  designCueIds: string[];
+  note: string;
+}
+
 export interface VehicleDesign {
   id: string;
   name: string;
@@ -59,5 +69,6 @@ export interface VehicleDesign {
   };
   parameters: VehicleParameters;
   measurements: Measurement[];
+  visualReferences?: VehicleVisualReferenceLink[];
   operationLog: DesignOperation[];
 }

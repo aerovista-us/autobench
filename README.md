@@ -55,7 +55,7 @@ npm run build
 npm start
 ```
 
-Open `/` for the 3D model or `/capture` for measurement and photo evidence.
+Open `/` for the 3D model, `/capture` for actual Pops Van measurement/photo evidence, or `/references/g10-1986` for the initial factory G10 front-end styling reference and +8/+10/+12/+14 in design guides. The G10 image is **not** a measured Pops Van photo; see `docs/M1_G10_FRONT_END_REFERENCE.md`.
 
 **Photo privacy and backups:** image bytes are stored in the current browser's IndexedDB only. Capture JSON includes filenames, measurements, marker positions and scales, **not the image bytes**. Keep your original photos separately; reattach them after importing JSON on another browser. No cloud upload or automatic apply-to-model is implemented.
 
