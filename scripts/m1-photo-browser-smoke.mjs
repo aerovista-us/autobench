@@ -42,11 +42,36 @@ try {
   await img.waitFor({ timeout: 12000 });
   const restored = await page.locator(".photo-scale-result").innerText();
   if (!restored.includes("2.540 mm/px")) throw new Error("Image scale did not survive reload");
+
+  const json = await page.evaluate(() => localStorage.getItem("autobench:pops-van:capture:v1"));
+  if (!json) throw new Error("Capture metadata did not autosave");
+  const secondContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const transfer = await secondContext.newPage();
+  transfer.on("pageerror", error => errors.push(error.message));
+  await transfer.goto(`${process.env.AUTOBENCH_URL ?? "http://127.0.0.1:3000"}/capture`, { waitUntil: "networkidle" });
+  await transfer.getByLabel("Import capture JSON").setInputFiles([{
+    name: "pops-van-capture-v1.json", mimeType: "application/json", buffer: Buffer.from(json),
+  }]);
+  await transfer.getByText("Image not available in this browser", { exact: false }).waitFor();
+  await transfer.getByLabel("Attach image").setInputFiles([{
+    name: "wrong-photo.png", mimeType: "image/png", buffer: Buffer.from(base64, "base64"),
+  }]);
+  await transfer.getByText("Reattachment rejected:", { exact: false }).waitFor();
+  await transfer.getByLabel("Attach image").setInputFiles([{
+    name: "pops-side-test.png", mimeType: "image/png", buffer: Buffer.from(base64, "base64"),
+  }]);
+  await transfer.getByRole("img", { name: "Calibration image: pops-side-test.png" }).waitFor({ timeout: 12000 });
+  const reattachedScale = await transfer.locator(".photo-scale-result").innerText();
+  if (!reattachedScale.includes("2.540 mm/px")) {
+    throw new Error("Reattaching the original did not preserve scale and markers");
+  }
+  await secondContext.close();
   if (errors.length) throw new Error(`Browser errors: ${errors.join("; ")}`);
   await page.screenshot({ path: "artifacts/m1-photo-calibration.png", fullPage: true });
   console.log(JSON.stringify({
     status: "pass", imageImport: true, localBlobPersistence: true,
     namedMarkers: true, imagePlaneScale: "2.540 mm/px", noNetworkUpload: true,
+    reattachmentPreservesCalibration: true, mismatchedImageRejected: true,
   }));
 } finally {
   await browser.close();

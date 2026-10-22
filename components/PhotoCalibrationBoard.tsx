@@ -37,6 +37,7 @@ export function PhotoCalibrationBoard({
   const [secondMarkerId, setSecondMarkerId] = useState("");
   const [knownDistanceIn, setKnownDistanceIn] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [attachmentVersion, setAttachmentVersion] = useState(0);
   const [message, setMessage] = useState("");
   const selected = photos.find(p => p.id === selectedId) ?? photos[0];
   const activeId = selected?.id ?? "";
@@ -58,7 +59,7 @@ export function PhotoCalibrationBoard({
       alive = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [activeId, selected?.widthPx, selected?.heightPx]);
+  }, [activeId, selected?.widthPx, selected?.heightPx, attachmentVersion]);
 
   useEffect(() => {
     setFirstMarkerId(selected?.scale?.firstMarkerId ?? "");
@@ -87,14 +88,33 @@ export function PhotoCalibrationBoard({
   async function attachImage(file?: File) {
     if (!selected || !file) return;
     try {
+      const expected = selected.widthPx && selected.heightPx ? {
+        reference: selected.reference, widthPx: selected.widthPx,
+        heightPx: selected.heightPx, sha256: selected.sha256,
+      } : undefined;
+      const dimensions = await storePhotoFile(selected.id, file, expected);
+      onUpdatePhoto({ ...selected, reference: file.name, ...dimensions });
+      setAttachmentVersion(v => v + 1);
+      setMessage(expected
+        ? "Original image reattached; saved markers and scale were preserved."
+        : "Image attached to filename-only reference. You can now place markers.");
+    } catch (error) {
+      setMessage(`Reattachment rejected: ${String(error)}`);
+    }
+  }
+
+  async function replaceImage(file?: File) {
+    if (!selected || !file) return;
+    try {
       const dimensions = await storePhotoFile(selected.id, file);
       onUpdatePhoto({
         ...selected, reference: file.name, ...dimensions,
         markers: [], scale: undefined,
       });
-      setMessage("Image attached locally. Markers and scale were reset for the new image.");
+      setAttachmentVersion(v => v + 1);
+      setMessage("Image replaced; previous marker coordinates and scale were explicitly cleared.");
     } catch (error) {
-      setMessage(`Image rejected: ${String(error)}`);
+      setMessage(`Replacement rejected: ${String(error)}`);
     }
   }
 
@@ -198,6 +218,10 @@ export function PhotoCalibrationBoard({
             <strong>{selected.reference}</strong>
             <button onClick={() => void removeSelected()}>Remove photo</button>
           </div>
+          <label className="photo-replace-label">Replace with a different image (clears markers and scale)
+            <input aria-label="Replace image" type="file" accept="image/png,image/jpeg,image/webp"
+              onChange={event => { void replaceImage(event.target.files?.[0]); event.target.value = ""; }} />
+          </label>
           {imageUrl ? (
             <div className="photo-image-stage">
               <img src={imageUrl} alt={`Calibration image: ${selected.reference}`} onClick={placeMarker}

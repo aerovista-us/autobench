@@ -7,7 +7,7 @@
 3. Select an image. Choose named physical datums (SCALE-A, SCALE-B, front/rear axle centers, frame, firewall, radiator support and bumper face), then click the matching pixels on the image.
 4. For a known-length physical scale bar, select two marker IDs, enter the **actually measured** distance in inches, and save the image-plane scale.
 5. If the image also has FAX-L and RAX-L markers, AutoBench compares their image-plane distance to the capture register's wheelbase, indicating whether the scale uses independent datums.
-6. To transfer the capture to another browser, export JSON **and keep the original photos separately**. Reattach photos by filename after import.
+6. To transfer the capture to another browser, export JSON **and keep the original photos separately**. Reattach the matching original by filename; new captures also compare the stored SHA-256 and pixel dimensions before preserving existing markers/scale. To use a different image, choose **Replace image**, which explicitly clears its markers and scale.
 
 ## Critical limitations
 

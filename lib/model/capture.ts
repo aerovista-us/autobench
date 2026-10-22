@@ -42,6 +42,7 @@ export interface CapturePhoto {
   notes: string;
   widthPx?: number;
   heightPx?: number;
+  sha256?: string;
   markers?: PhotoMarker[];
   scale?: PhotoScale;
 }
@@ -186,6 +187,9 @@ export function parseCaptureDraft(json: string): CaptureDraft {
     if ((photo.widthPx !== undefined && (!Number.isInteger(photo.widthPx) || photo.widthPx < 1 || photo.widthPx > 30000)) ||
         (photo.heightPx !== undefined && (!Number.isInteger(photo.heightPx) || photo.heightPx < 1 || photo.heightPx > 30000))) {
       throw new Error("Invalid photo dimensions");
+    }
+    if (photo.sha256 !== undefined && (typeof photo.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(photo.sha256))) {
+      throw new Error("Invalid photo SHA-256");
     }
     if (photo.markers !== undefined) {
       if (!Array.isArray(photo.markers) || photo.markers.length > 100) throw new Error("Invalid marker list");
