@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SavedDesignReview } from "@/components/SavedDesignReview";
 import { popsVanBaseline, INCH } from "@/lib/model/popsVan";
 import { deriveVehicle } from "@/lib/model/derive";
 import type { Measurement, Provenance } from "@/lib/model/types";
@@ -34,7 +35,8 @@ export default function ModelPage() {
       <div style={{background:"#132533",padding:20,borderRadius:12,minWidth:175}}><small>Approach angle · derived</small><h2>{metrics.approachAngleDeg.toFixed(1)}°</h2></div>
       <div style={{background:"#132533",padding:20,borderRadius:12,minWidth:175}}><small>Not verified measurements</small><h2>{unverified.length} / {evidence.length}</h2></div>
     </div>
-    <h2>Assembly dimensions</h2>
+    <SavedDesignReview stage="model" />
+    <h2>Checked-in baseline assembly dimensions</h2>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:16}}>
       {groups.map(group=><section key={group.title} style={{border:"1px solid #314b5b",borderRadius:12,padding:20}}><h3>{group.title}</h3><dl>{group.entries.map(([label,value])=><div key={label} style={{display:"flex",justifyContent:"space-between",gap:12,borderTop:"1px solid #263c4c",padding:"11px 0"}}><dt>{label}</dt><dd style={{margin:0,whiteSpace:"nowrap"}}>{(value/INCH).toFixed(2)} in</dd></div>)}</dl></section>)}
     </div>
