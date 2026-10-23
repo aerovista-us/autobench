@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { DetailBlueprint, detailSheets, type DetailSheetId } from "./DetailBlueprint";
 import { useSavedVehicleDesign } from "@/lib/model/savedDesign";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
 import { resolveConceptOptions } from "@/lib/model/conceptOptions";
@@ -20,6 +21,7 @@ function Dim({x1,x2,y,label}:{x1:number;x2:number;y:number;label:string}) {
 export function BlueprintPlan() {
   const {design,hydrated} = useSavedVehicleDesign();
   const svg = useRef<SVGSVGElement>(null);
+  const [sheet,setSheet] = useState<"general"|DetailSheetId>("general");
   const p=design.parameters, m=deriveVehicle(design), concept=resolveConceptOptions(design);
   const left=105,right=1040, top=130;
   const total=m.bumperFrontXmm-m.bodyRearXmm;
@@ -34,7 +36,7 @@ export function BlueprintPlan() {
     clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
     const data=new XMLSerializer().serializeToString(clone);
     const url=URL.createObjectURL(new Blob([data],{type:"image/svg+xml;charset=utf-8"}));
-    const a=document.createElement("a");a.href=url;a.download=`pops-van-rev-${design.revision}-concept-sheet.svg`;a.click();
+    const a=document.createElement("a");a.href=url;a.download=`pops-van-rev-${design.revision}-${sheet}-concept-sheet.svg`;a.click();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   return <main className="plan-page">
@@ -43,9 +45,12 @@ export function BlueprintPlan() {
       <div className="plan-actions"><Link href="/">← Modify design</Link><Link href="/validate">Validate</Link><button onClick={download} disabled={!hydrated}>Export SVG sheet</button><button onClick={()=>window.print()}>Print / PDF</button></div>
     </header>
     <div className="plan-status"><strong>REV {design.revision}</strong><span>{hydrated?"LOCAL SAVED CANDIDATE":"LOADING LOCAL DESIGN"}</span><span>UNVERIFIED · NOT FOR FABRICATION</span><span>SCHEMATIC · NOT TO SCALE ON SCREEN</span></div>
+    <nav className="plan-sheet-tabs" aria-label="Fabrication concept drawing sheets">
+      {[{id:"general",title:"General arrangement",number:"A-101"},...detailSheets].map(item=><button key={item.id} type="button" aria-pressed={sheet===item.id} className={sheet===item.id?"selected":""} onClick={()=>setSheet(item.id as "general"|DetailSheetId)}><small>{item.number}</small>{item.title}</button>)}
+    </nav>
     <div className="plan-grid">
       <section className="plan-sheet">
-        <svg ref={svg} viewBox="0 0 1140 740" role="img" aria-label="Dimensioned conceptual side and top schematic of the selected Pops Van with fabrication callouts">
+        <div ref={node=>{if(sheet==="general")svg.current=node?.querySelector("svg")??null}} style={{display:sheet==="general"?"block":"none"}}><svg viewBox="0 0 1140 740" role="img" aria-label="Dimensioned conceptual side and top schematic of the selected Pops Van with fabrication callouts">
           <defs><pattern id="plan-grid-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#163754" strokeWidth=".7"/></pattern></defs>
           <rect width="1140" height="740" fill="#092039"/><rect width="1140" height="740" fill="url(#plan-grid-pattern)"/>
           <g fontFamily="ui-monospace, SFMono-Regular, Consolas, monospace">
@@ -72,7 +77,8 @@ export function BlueprintPlan() {
             <text x="40" y="724" fill={amber} fontSize="12">CONCEPTUAL GEOMETRY ONLY — NO CUTTING, WELDING OR ROADWORTHINESS APPROVAL</text>
             <text x="1098" y="724" textAnchor="end" fill={line} fontSize="12">A-101 / 01</text>
           </g>
-        </svg>
+        </svg></div>
+        {sheet!=="general"&&<div ref={node=>{svg.current=node?.querySelector("svg")??null}}><DetailBlueprint design={design} sheet={sheet}/></div>}
       </section>
       <aside className="plan-aside">
         <section><span className="plan-kicker">01 / SELECTED CONFIGURATION</span><h2>Design schedule</h2>
