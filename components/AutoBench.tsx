@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSavedVehicleDesign } from "@/lib/model/savedDesign";
 import { VehicleViewport } from "./VehicleViewport";
 import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
@@ -26,7 +27,7 @@ function downloadText(filename: string, contents: string, mime: string) {
 }
 
 export function AutoBench() {
-  const [design, setDesign] = useState<VehicleDesign>(popsVanBaseline);
+  const { design, setDesign, hydrated } = useSavedVehicleDesign();
   const [inspectSuspension, setInspectSuspension] = useState(false);
   const concepts = resolveConceptOptions(design);
   const exteriorPreset = currentExteriorPreset(design);
@@ -78,6 +79,7 @@ export function AutoBench() {
         <div className="topbar-meta">
           <span className="status-dot" />
           <span>REV {design.revision}</span>
+          <span>{hydrated ? "LOCAL DRAFT" : "LOADING DRAFT"}</span>
           <span>MM SOT</span>
           <button onClick={exportManifest}>Export manifest</button>
         </div>
@@ -85,11 +87,10 @@ export function AutoBench() {
 
       <section className="modebar">
         {["CAPTURE", "MODEL", "MODIFY", "VALIDATE", "PLAN", "RENDER"].map(
-          (mode, index) => (
-            <button key={mode} className={index === 2 ? "active" : ""}
-              disabled={mode !== "CAPTURE" && mode !== "MODIFY"}
-              title={mode !== "CAPTURE" && mode !== "MODIFY" ? "Planned mode" : undefined}
-              onClick={() => { if (mode === "CAPTURE") window.location.assign("/capture"); }}>
+          (mode) => (
+            <button key={mode} className={mode === "MODIFY" ? "active" : ""}
+              onClick={() => window.location.assign(mode === "CAPTURE" ? "/capture" : mode === "MODIFY" ? "/" : "/" + mode.toLowerCase())}
+              title={mode === "MODEL" ? "Return to the live vehicle model" : "Open " + mode.toLowerCase() + " stage"}>
               {mode}
             </button>
           ),
