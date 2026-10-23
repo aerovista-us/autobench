@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSavedVehicleDesign } from "@/lib/model/savedDesign";
+import { parseStoredDesign, useSavedVehicleDesign } from "@/lib/model/savedDesign";
 import { VehicleViewport } from "./VehicleViewport";
 import { FrontClipReviewPanel } from "./FrontClipReviewPanel";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
@@ -29,6 +29,7 @@ function downloadText(filename: string, contents: string, mime: string) {
 export function AutoBench() {
   const { design, setDesign, hydrated } = useSavedVehicleDesign();
   const [inspectSuspension, setInspectSuspension] = useState(false);
+  const [importFeedback, setImportFeedback] = useState("");
   const concepts = resolveConceptOptions(design);
   const exteriorPreset = currentExteriorPreset(design);
   function setConcept<K extends keyof VehicleConceptOptions>(key: K, value: VehicleConceptOptions[K]) {
@@ -48,6 +49,20 @@ export function AutoBench() {
         reason,
       ),
     );
+  }
+
+  async function importManifest(file: File | undefined) {
+    if (!file) return;
+    if (file.size > 250_000) { setImportFeedback("Import rejected: manifest exceeds 250 KB."); return; }
+    try {
+      const restored = parseStoredDesign(await file.text());
+      if (!restored) { setImportFeedback("Import rejected: invalid, incompatible or foreign AutoBench manifest."); return; }
+      if (!window.confirm(`Replace the local working design with imported revision ${restored.revision}? Export your current draft first if needed.`)) {
+        setImportFeedback("Import cancelled; current model unchanged."); return;
+      }
+      setDesign(restored);
+      setImportFeedback(`Imported saved revision ${restored.revision}; assumption flags remain unverified.`);
+    } catch { setImportFeedback("Import failed; current draft was not changed."); }
   }
 
   function exportProjection() {
@@ -82,9 +97,15 @@ export function AutoBench() {
           <span>{hydrated ? "LOCAL DRAFT" : "LOADING DRAFT"}</span>
           <span>MM SOT</span>
           <button onClick={exportManifest}>Export manifest</button>
+          <label style={{cursor:"pointer",fontSize:12,border:"1px solid #42637a",borderRadius:6,padding:"6px 9px"}}>
+            Import manifest
+            <input type="file" accept=".json,application/json" style={{display:"none"}} aria-label="Import AutoBench JSON manifest"
+              onChange={event => {void importManifest(event.target.files?.[0]);event.target.value="";}} />
+          </label>
         </div>
       </header>
 
+      {importFeedback && <p role="status" style={{margin:0,padding:"8px 18px",fontSize:13,background:"#162d3b",color:"#e8f0f6"}}>{importFeedback}</p>}
       <section className="modebar">
         {["CAPTURE", "MODEL", "MODIFY", "VALIDATE", "PLAN", "RENDER"].map(
           (mode) => (
