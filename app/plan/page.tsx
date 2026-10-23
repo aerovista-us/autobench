@@ -1,8 +1,3 @@
-import Link from "next/link";
-export const metadata = { title: "Plan | Pops Van AutoBench", description: "Turn a candidate design into a measurement and fabrication preparation checklist. This is not a construction-ready parts list." };
-const steps = ["Capture baseline dimensions and evidence sources","Choose an exterior and suspension concept in Modify","Validate geometry and document unresolved conflicts","Export design manifest and prepare engineering review"]; 
-export default function Page(){return <main style={{minHeight:"100vh",padding:"clamp(20px,5vw,72px)",background:"#050a0f",color:"#e8f0f6",fontFamily:"system-ui,sans-serif"}}>
-<nav aria-label="Workbench stages" style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:55}}><Link href="/" style={{color:"#8bcdf6"}}>AutoBench</Link>{["modify","validate","plan","render"].map(stage=><Link key={stage} href={"/"+stage} style={{color:stage==="plan"?"#fff":"#8bcdf6",fontWeight:stage==="plan"?800:400,textTransform:"capitalize"}}>{stage}</Link>)}</nav>
-<p style={{letterSpacing:3,color:"#80c7ef"}}>POPS VAN / WORKBENCH JOURNEY</p><h1 style={{fontSize:"clamp(44px,7vw,86px)",margin:"12px 0"}}>Plan</h1><p style={{maxWidth:720,fontSize:22,lineHeight:1.6,color:"#b3c6d3"}}>Turn a candidate design into a measurement and fabrication preparation checklist. This is not a construction-ready parts list.</p>
-<div style={{border:"1px solid #2e4557",borderRadius:16,padding:30,maxWidth:800,marginTop:35,background:"#101a23"}}><h2>Recommended sequence</h2><ol style={{lineHeight:2,fontSize:18}}>{steps.map(step=><li key={step}>{step}</li>)}</ol><p style={{color:"#f4b84a"}}>Engineering gate: assumptions and reference geometry cannot certify physical fitment or fabrication safety.</p><Link href="/" style={{display:"inline-block",padding:"14px 22px",background:"#27658d",color:"#fff",borderRadius:8,marginTop:12}}>Export baseline manifest →</Link></div>
-</main>}
+import { BlueprintPlan } from "@/components/BlueprintPlan";
+export const metadata = { title: "Fabrication Planning Board | Pops Van AutoBench", description: "Selected-revision blueprint-style conceptual planning sheet. Not fabrication-approved." };
+export default function Page(){ return <BlueprintPlan/>; }
