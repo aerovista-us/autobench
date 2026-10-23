@@ -878,3 +878,10 @@ input[type="range"] {
 .plan-aside li{margin-bottom:9px}.plan-warning{border-color:#916b36!important}.plan-warning h2{color:#f8c36a}.plan-warning p{color:#c7d6e1;font-size:13px;line-height:1.65}.plan-warning a{color:#83d1ff}
 @media(max-width:1050px){.plan-grid{grid-template-columns:1fr}.plan-aside{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
 @media print{.plan-page{padding:0;background:white}.plan-header,.plan-actions,.plan-aside{display:none!important}.plan-grid{display:block}.plan-sheet{border:0;box-shadow:none}.plan-status{color:black}.plan-status span:nth-child(3){color:#815000}@page{size:landscape;margin:10mm}}
+
+.plan-sheet-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 18px}
+.plan-sheet-tabs button{display:flex;flex-direction:column;align-items:start;gap:6px;min-width:154px;padding:12px 16px;border:1px solid #2d4b61;border-radius:8px;background:#102334;color:#d3e8f6;cursor:pointer;text-align:left;font-size:13px}
+.plan-sheet-tabs button small{font-size:10px;letter-spacing:.13em;color:#85badc}
+.plan-sheet-tabs button.selected{border-color:#f8c36a;background:#243343;color:#fff}
+.plan-sheet-tabs button.selected small{color:#f8c36a}
+@media print{.plan-sheet-tabs{display:none!important}}
