@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { DetailBlueprint, detailSheets, type DetailSheetId } from "./DetailBlueprint";
+import { EngineeringPreparation } from "./EngineeringPreparation";
 import { useSavedVehicleDesign } from "@/lib/model/savedDesign";
 import { deriveVehicle, formatInches } from "@/lib/model/derive";
 import { resolveConceptOptions } from "@/lib/model/conceptOptions";
@@ -88,5 +89,6 @@ export function BlueprintPlan() {
         <section className="plan-warning"><span className="plan-kicker">03 / RELEASE GATE</span><h2>Physical fitment blocked</h2><p>All dimensions are digital design inputs. These are not certified shop drawings, cutting templates, weld specifications, or verified physical clearances.</p><p>{design.measurements.filter(m=>m.confidence==="verified").length} of {design.measurements.length} baseline measurement records are verified. Local browser data cannot certify measurements.</p><Link href="/capture">Capture evidence →</Link></section>
       </aside>
     </div>
+    <EngineeringPreparation design={design}/>
   </main>;
 }
