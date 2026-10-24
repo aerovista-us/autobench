@@ -14,6 +14,7 @@ export function FrontEndReferenceGuide() {
   const [requestedOffset, setRequestedOffset] = useState<number | null>(null);
   const [selectedCue, setSelectedCue] = useState(g10FrontReference.designCues[0].id);
   const [showMarkers, setShowMarkers] = useState(true);
+  const [conceptPreview, setConceptPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = new URLSearchParams(window.location.search).get("offset");
@@ -50,6 +51,22 @@ export function FrontEndReferenceGuide() {
           The photo cannot establish wheelbase, frame geometry, fender clearance or camera pose.</span>
       </section>
 
+      <section className="reference-alert" role="note">
+        <strong>CUSTOM POPS VAN VISUAL TARGET · NOT A MEASURED VEHICLE</strong>
+        <span>Lower, shorter hood; larger original-style Chevrolet grille; metallic blue upper body fading to black lower panels; solid cargo side with a windowless sliding door. Preserve the cab windows and the original G-series proportions. This styling target does not authorize any CAD, chassis, or body-panel dimensions.</span>
+      </section>
+      <section className="reference-photo-panel" style={{ marginBottom: 24, padding: 20 }}>
+        <div className="reference-panel-heading"><div><span>CUSTOM PAINT + BODY CONCEPT</span><h2>Blue over black · windowless sliding door</h2></div></div>
+        <p>Preview the updated concept image without replacing the original factory-style reference. The preview stays in this browser session and does not modify saved measurements or vehicle geometry.</p>
+        <label style={{ display: "inline-block", padding: "10px 14px", border: "1px solid currentColor", borderRadius: 8, cursor: "pointer" }}>
+          Load concept PNG
+          <input type="file" accept="image/png,image/webp,image/jpeg" style={{ display: "block", marginTop: 8 }}
+            onChange={event => { const file=event.target.files?.[0]; if(!file) return; if(!file.type.startsWith("image/"))return;
+              const reader=new FileReader();reader.onload=()=>setConceptPreview(typeof reader.result==="string"?reader.result:null);reader.readAsDataURL(file); }} />
+        </label>
+        {conceptPreview && <img src={conceptPreview} alt="Custom Pops Van blue-to-black body and sliding cargo door concept" style={{ width: "100%", maxHeight: 620, objectFit: "contain", marginTop: 16 }} />}
+        <p style={{ marginTop: 12 }}>Visual-only design intent: a larger grille, lower hood profile, dark lower body and uninterrupted solid cargo side. The original source photograph remains below for comparison.</p>
+      </section>
       <div className="reference-grid">
         <section className="reference-photo-panel">
           <div className="reference-panel-heading">
