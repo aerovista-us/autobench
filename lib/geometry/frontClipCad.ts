@@ -113,40 +113,40 @@ export function buildFrontClipCad(kernel: Kernel, design: VehicleDesign): FrontC
   const hoodFace = kernel.makeFace(kernel.makeWire(edges));
   add("sloped-g10-hood", "body", kernel.extrude(hoodFace, 0, p.bodyWidthMm - 188, 0));
 
-  // Fixed front fascia, horizontal grille rhythm, stacked rectangular lamps.
+  // Expanded grille dominates the nose while keeping the original G-series
+  // stacked lamps. These are visual concept dimensions, not captured datums.
   const nose = s.bodyFrontXmm;
-  add("front-fascia", "body", box(nose - 16, -halfW + 80,
-    p.groundClearanceMm + 780, nose + 18, halfW - 80,
-    p.groundClearanceMm + 1280));
-  // The previous open gap beneath the grille made the nose look like a
-  // commercial box chassis. A separate lower steel valance visually connects
-  // the front fenders to the bumper while retaining independent CAD parts.
-  add("front-lower-valance", "body", box(nose - 15, -halfW + 90,
-    p.groundClearanceMm + 255, nose + 19, halfW - 90,
-    p.groundClearanceMm + 785));
-  add("front-valance-chrome-divider", "chrome", box(nose + 20, -halfW + 105,
-    p.groundClearanceMm + 765, nose + 37, halfW - 105,
-    p.groundClearanceMm + 783));
-  add("recessed-grille", "dark", box(nose + 19, -565,
-    p.groundClearanceMm + 850, nose + 42, 565, p.groundClearanceMm + 1220));
-  for (let i = 0; i < 6; i++) {
-    const z = p.groundClearanceMm + 878 + i * 59;
+  add("front-fascia", "body", box(nose - 16, -halfW + 60,
+    p.groundClearanceMm + 650, nose + 18, halfW - 60,
+    p.groundClearanceMm + 1200));
+  add("front-lower-valance", "body", box(nose - 15, -halfW + 70,
+    p.groundClearanceMm + 255, nose + 19, halfW - 70,
+    p.groundClearanceMm + 655));
+  add("front-valance-chrome-divider", "chrome", box(nose + 20, -halfW + 85,
+    p.groundClearanceMm + 640, nose + 37, halfW - 85,
+    p.groundClearanceMm + 657));
+  const grilleHalfWidth = Math.max(300, halfW - 255);
+  add("recessed-grille", "dark", box(nose + 19, -grilleHalfWidth,
+    p.groundClearanceMm + 700, nose + 42, grilleHalfWidth,
+    p.groundClearanceMm + 1170));
+  for (let i = 0; i < 7; i++) {
+    const z = p.groundClearanceMm + 730 + i * 65;
     add(`chrome-grille-slat-${i + 1}`, "chrome",
-      box(nose + 43, -555, z, nose + 57, 555, z + 15));
+      box(nose + 43, -grilleHalfWidth + 10, z, nose + 57, grilleHalfWidth - 10, z + 16));
   }
-  add("chevrolet-grille-emblem", "chrome", box(nose + 58, -85,
-    p.groundClearanceMm + 1020, nose + 70, 85, p.groundClearanceMm + 1070));
+  add("chevrolet-grille-emblem", "chrome", box(nose + 58, -90,
+    p.groundClearanceMm + 925, nose + 70, 90, p.groundClearanceMm + 980));
 
   for (const side of [-1, 1]) {
-    const centerY = side * (halfW - 175);
+    const centerY = side * (halfW - 130);
     for (let level = 0; level < 2; level++) {
-      const z = p.groundClearanceMm + 990 + level * 140;
+      const z = p.groundClearanceMm + 785 + level * 188;
       add(`${side > 0 ? "left" : "right"}-${level ? "upper" : "lower"}-lamp-bezel`,
-        "chrome", box(nose + 20, centerY - 115, z,
-          nose + 73, centerY + 115, z + 118));
+        "chrome", box(nose + 20, centerY - 94, z,
+          nose + 73, centerY + 94, z + 158));
       add(`${side > 0 ? "left" : "right"}-${level ? "upper" : "lower"}-lamp-lens`,
-        "light", box(nose + 74, centerY - 97, z + 14,
-          nose + 89, centerY + 97, z + 104));
+        "light", box(nose + 74, centerY - 79, z + 15,
+          nose + 89, centerY + 79, z + 142));
     }
   }
 

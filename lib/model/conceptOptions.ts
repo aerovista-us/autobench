@@ -19,7 +19,7 @@ export interface VehicleConceptOptions {
 }
 
 export const defaultConceptOptions: VehicleConceptOptions = {
-  sideGlass: "conversion",
+  sideGlass: "cargo",
   roofRack: false,
   sideSteps: true,
   rearSpare: false,
