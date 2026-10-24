@@ -181,7 +181,7 @@ export function buildRefinedCabin(kernel: Kernel, design: VehicleDesign,
         archCut(box(rear + 105, trimY + 3, p.groundClearanceMm + 1130,
           cab - 100, trimY + 19, p.groundClearanceMm + 1190)));
     }
-    // A gently stepped shoulder creates a visible side contour, not a slab.
+    // Blue-to-black lower paint field: separate exact skin panels retain STEP material boundaries.\n    add(`${side > 0 ? "left" : "right"}-lower-black-paint-panel`, "dark",\n      archCut(box(rear + 90, trimY + 2, p.groundClearanceMm + 345,\n        cab - 100, trimY + 10, p.groundClearanceMm + 940)));\n    // A gently stepped shoulder creates a visible side contour, not a slab.
     add(`${side > 0 ? "left" : "right"}-upper-side-shoulder`, "body",
       box(rear + 150, trimY - 9, roofZ - 1170,
         cab - 145, trimY + 8, roofZ - 1115));
