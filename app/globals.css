@@ -885,3 +885,23 @@ input[type="range"] {
 .plan-sheet-tabs button.selected{border-color:#f8c36a;background:#243343;color:#fff}
 .plan-sheet-tabs button.selected small{color:#f8c36a}
 @media print{.plan-sheet-tabs{display:none!important}}
+
+
+.plan-engineering{margin-top:24px;border:1px solid #31536c;border-radius:10px;background:#0d2030;padding:clamp(16px,2vw,28px)}
+.plan-engineering-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.plan-engineering-header h2{font-size:clamp(23px,3vw,32px);margin:8px 0}
+.plan-engineering-header p,.plan-engineering-tables p{font-size:13px;line-height:1.6;color:#aac5d8}
+.plan-engineering-header button,.plan-filter select{padding:11px 14px;background:#17364d;color:#e7f4fd;border:1px solid #54809b;border-radius:6px;cursor:pointer}
+.plan-engineering-summary{display:flex;gap:20px;flex-wrap:wrap;border-block:1px solid #2a4c64;padding:14px 0;margin:18px 0;font-size:13px;color:#b5d1e2}
+.plan-engineering-summary strong{color:#ffca79}
+.plan-filter{display:flex;align-items:center;gap:12px;font-size:13px;margin-bottom:16px}
+.plan-engineering-tables{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.plan-engineering-tables>div{min-width:0}.plan-engineering-tables h3{font-size:17px}
+.plan-table-scroll{overflow-x:auto;border:1px solid #2c4c62;border-radius:8px}
+.plan-engineering table{width:100%;border-collapse:collapse;font-size:12px;min-width:440px}
+.plan-engineering th{text-align:left;color:#95c5e3;background:#123048;padding:12px 10px;white-space:nowrap}
+.plan-engineering td{padding:12px 10px;vertical-align:top;border-top:1px solid #29475a}
+.plan-engineering td small{display:block;color:#87a5b8;margin-top:5px;line-height:1.5}
+.plan-missing{color:#ffca79}.plan-good{color:#82e4c0}
+@media(max-width:1050px){.plan-engineering-tables{grid-template-columns:1fr}}
+@media print{.plan-engineering{break-before:page;background:white;color:black}.plan-engineering-header button,.plan-filter{display:none}.plan-engineering td,.plan-engineering th{color:black}}
