@@ -233,9 +233,9 @@ function ExactVehicleModel({ exact, inspectSuspension }: { exact: ExactVehicleMe
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   const finishes = {
-    body: { color: "#194773", roughness: 0.32, metalness: 0.24 },
+    body: { color: "#0755a2", roughness: 0.22, metalness: 0.46 },
     chrome: { color: "#e0e8f0", roughness: 0.3, metalness: 0.65 },
-    dark: { color: "#313b47", roughness: 0.75, metalness: 0.08 },
+    dark: { color: "#101722", roughness: 0.38, metalness: 0.16 },
     glass: { color: "#183b53", roughness: 0.18, metalness: 0.12 },
     rubber: { color: "#2d3138", roughness: 0.96, metalness: 0.01 },
     steel: { color: "#647381", roughness: 0.6, metalness: 0.7 },
