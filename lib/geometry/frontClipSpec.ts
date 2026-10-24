@@ -26,7 +26,7 @@ export function frontClipSpec(design: VehicleDesign): FrontClipSpec {
   const frontAxleXmm = p.baselineWheelbaseMm + p.frontAxleOffsetMm;
   const bodyFrontXmm = p.baselineWheelbaseMm + p.frontOverhangMm;
   // Short-nose G-series proportion. Provisional visual proportion, NOT measured.
-  const cabinFrontXmm = bodyFrontXmm - 850;
+  const cabinFrontXmm = bodyFrontXmm - 700;
   const wheelOpeningRadiusMm = p.tireDiameterMm / 2 + 85;
   const faceLandMm = bodyFrontXmm - frontAxleXmm - wheelOpeningRadiusMm;
   return {
@@ -40,10 +40,10 @@ export function frontClipSpec(design: VehicleDesign): FrontClipSpec {
     radialStaticMarginMm: 85,
     faceLandMm,
     cabinArchOverlapMm: Math.max(0, cabinFrontXmm - (frontAxleXmm - wheelOpeningRadiusMm)),
-    hoodRearTopZmm: p.groundClearanceMm + 1360,
-    hoodNoseTopZmm: p.groundClearanceMm + 1270,
-    hoodRearBottomZmm: p.groundClearanceMm + 1160,
-    hoodNoseBottomZmm: p.groundClearanceMm + 1100,
+    hoodRearTopZmm: p.groundClearanceMm + 1230,
+    hoodNoseTopZmm: p.groundClearanceMm + 1190,
+    hoodRearBottomZmm: p.groundClearanceMm + 1090,
+    hoodNoseBottomZmm: p.groundClearanceMm + 1050,
     bumperFrontXmm: bodyFrontXmm + p.bumperLeadMm,
     widthMm: p.bodyWidthMm,
     groundClearanceMm: p.groundClearanceMm,
